@@ -20,9 +20,9 @@ public class Character {
 
     public float getXOnCollision(float percentX, Rectangle rect, float newx){
         if(percentX < 0){
-            newx = rect.x + rect.width + 1;
+            newx = rect.x + rect.width + 10;
         }else if(percentX > 0){
-            newx = rect.x - 1;
+            newx = rect.x - 10;
         }
         return newx;
     }

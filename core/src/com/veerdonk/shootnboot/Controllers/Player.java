@@ -35,11 +35,26 @@ public class Player extends Character{
         float newx = getX() + percentX * playerSpeed;
         float newy = getY() + percentY * playerSpeed;
         for(MapNode node : collisionMapnodes){
+            Gdx.app.log("nodecontents", node.wallsInTile.toString(","));
             for(Rectangle wallRect : node.wallsInTile){
-                if(wallRect.overlaps(playerRect)){
-                    newx = getXOnCollision(percentX, wallRect, newx);
-                    newy = getYOnCollision(percentY, wallRect, newy);
+                if(wallRect.x + 32 > playerRect.x){
+                    newx = wallRect.x + 33;
+                }//TODO use pixel calculations instead of overlaps
+                if(wallRect.x < playerRect.x + 32){
+                    newx = wallRect.x - 1;
                 }
+                if(wallRect.y + 32 > playerRect.y){
+                    newy = wallRect.y + 33;
+                }
+                if(wallRect.y < playerRect.y+32){
+                    newy = wallRect.y - 1;
+                }
+
+//                if(wallRect.overlaps(playerRect)){
+//
+//                    newx = getXOnCollision(percentX, wallRect, newx);
+//                    newy = getYOnCollision(percentY, wallRect, newy);
+//                }
             }
             for(Zombie zombie : node.zombiesInTile){
                 if(zombie.getZombieRect().overlaps(playerRect)){

@@ -74,14 +74,22 @@ public class ShootNBoot extends ApplicationAdapter {
 			for(int j = 0; j < mapHeight/mapNodeHeight; j++){
 				mapNodes[i][j] = new MapNode(i*mapNodeWidth,j*mapNodeHeight,mapNodeWidth,mapNodeHeight, i, j);
 		}}
-		MapLayer collisionObjectLayer = tiledMap.getLayers().get("CollisionLayer"); //TODO check whether this is right
-		MapObjects mapObjects = collisionObjectLayer.getObjects();
-		Gdx.app.log("mapobjects: ", mapObjects.getByType(RectangleMapObject.class).toString());
-		for(RectangleMapObject rectangleMapObject : mapObjects.getByType(RectangleMapObject.class)){
-			int wallXNode = (int) rectangleMapObject.getRectangle().x/mapWidth;
-			int wallYNode = (int) rectangleMapObject.getRectangle().y/mapHeight;
-			mapNodes[wallXNode][wallYNode].wallsInTile.add(rectangleMapObject.getRectangle());
-		}
+		TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("background"); //TODO check whether this is right
+		for(int x = 0; x < mapWidth/layer.getTileWidth(); x++){
+		    for(int y = 0; y < mapHeight/layer.getTileHeight(); y++){
+		        if(layer.getCell(x,y) != null && layer.getCell(x, y).getTile().getProperties().containsKey("blocked")){
+		            mapNodes[x*32/mapNodeWidth][y*32/mapNodeHeight].wallsInTile.add(new Rectangle(x*32, y*32, 32, 32));
+		            Gdx.app.log("wall","found");
+                }
+            }
+        }
+
+//		for(RectangleMapObject rectangleMapObject : mapObjects.getByType(RectangleMapObject.class)){
+//			int wallXNode = (int) rectangleMapObject.getRectangle().x/mapWidth;
+//			int wallYNode = (int) rectangleMapObject.getRectangle().y/mapHeight;
+//			mapNodes[wallXNode][wallYNode].wallsInTile.add(rectangleMapObject.getRectangle());
+//		}
+		Gdx.app.log("walls in 0,0: ", mapNodes[0][0].wallsInTile.toString(","));
 		batch = new SpriteBatch();
 		cameraController = new CameraController(800, 480);
 		Sprite playerSprite = textureAtlas.createSprite("survivor1_stand");
@@ -144,10 +152,11 @@ public class ShootNBoot extends ApplicationAdapter {
 			//fires a bullet when the right touchpad is touched
 			Bullet b = bp.obtain();
 			b.fire( new Vector2(
-					player.getX(),
-					player.getY()),
-					rotVec.x,
-					rotVec.y,
+					    player.getX(),
+					    player.getY()),
+					new Vector2(
+					        rotVec.x,
+					    rotVec.y),
 					rotVec.angle(),
                     player.getWeapon()
 					);
@@ -188,21 +197,27 @@ public class ShootNBoot extends ApplicationAdapter {
 
 	public boolean checkProjectileCollisions(Bullet b, Array<MapNode> nodesToCheck){
 		for(MapNode node : nodesToCheck){
-			for(Zombie z : node.zombiesInTile){
-				if(b.bulletRect.overlaps(z.getZombieRect())){
-					z.getShot(b);
-					return true;
+			if(node.zombiesInTile != null) {
+				for (Zombie z : node.zombiesInTile) {
+					if (b.bulletRect.overlaps(z.getZombieRect())) {
+						z.getShot(b);
+						return true;
+					}
 				}
 			}
-			for(Player p : node.playerInTile){
-				if(b.bulletRect.overlaps(p.getPlayerRect())){
-					p.getShot(b);
-					return true;
+			if(node.playerInTile != null) {
+				for (Player p : node.playerInTile) {
+					if (b.bulletRect.overlaps(p.getPlayerRect())) {
+						p.getShot(b);
+						return true;
+					}
 				}
 			}
-			for(Rectangle rect : node.wallsInTile){
-				if(b.bulletRect.overlaps(rect)){
-					return true; //walls dont mind getting shot
+			if(node.wallsInTile != null) {
+				for (Rectangle rect : node.wallsInTile) {
+					if (b.bulletRect.overlaps(rect)) {
+						return true; //walls dont mind getting shot
+					}
 				}
 			}
 		}
@@ -249,8 +264,8 @@ public class ShootNBoot extends ApplicationAdapter {
 			collisonMapNodes.add(mapNodes[xNode - 1][yNode + 1]);//get upper left node
 		}
 		//direction is up and were not on the top node
-		if (direction.y < 0 && yNode < mapHeight/mapNodeHeight) {
-			collisonMapNodes.add(mapNodes[xNode][yNode - 1]);//get top node
+		if (direction.y > 0 && yNode < mapHeight/mapNodeHeight) {
+			collisonMapNodes.add(mapNodes[xNode][yNode + 1]);//get top node
 		}
 
 		return collisonMapNodes;
