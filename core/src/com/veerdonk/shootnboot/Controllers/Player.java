@@ -4,28 +4,25 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.veerdonk.shootnboot.Model.Bullet;
 import com.veerdonk.shootnboot.Model.Gun;
+import com.veerdonk.shootnboot.Model.MapNode;
 import com.veerdonk.shootnboot.Pools.BulletPool;
 
 public class Player extends Character{
     private float width = 32f;
     private float height = 32f;
-    private Texture playerImage;
     private Sprite playerSprite;
     private float playerSpeed;
     private Rectangle playerRect;
-    private int playerHealth;
     private Gun weapon;
-    private BulletPool bp;
 
-    public Player(Sprite playerImage, float playerSpeed, float initialX, float initialY, int playerHealth, BulletPool bp) {
-        this.playerSprite = playerImage;
+    public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY) {
+        this.playerSprite = playSprite;
         playerSprite.setPosition(initialX, initialY);
         this.playerSpeed = playerSpeed;
         this.playerRect = new Rectangle(initialX, initialY, width, height);
-        this.playerHealth = playerHealth;
-        this.bp = bp;
     }
 
     public void setPosition(float x, float y){
@@ -33,10 +30,24 @@ public class Player extends Character{
         this.getPlayerSprite().setPosition(x,y);
     }
 
-    public void move(float percentX, float percentY){ //TODO add check for bounding tiles/collisions
+    public void move(float percentX, float percentY, Array<MapNode> collisionMapnodes){
         float newx = getX() + percentX * playerSpeed;
         float newy = getY() + percentY * playerSpeed;
-
+        for(MapNode node : collisionMapnodes){
+            for(Rectangle wallRect : node.wallsInTile){
+                if(wallRect.overlaps(playerRect)){
+                    newx = getXOnCollision(percentX, wallRect, newx);
+                    newy = getYOnCollision(percentY, wallRect, newy);
+                }
+            }
+            for(Zombie zombie : node.zombiesInTile){
+                if(zombie.getZombieRect().overlaps(playerRect)){
+                    newx = getXOnCollision(percentX, zombie.getZombieRect(), newx);
+                    newy = getYOnCollision(percentY, zombie.getZombieRect(), newy);
+                    //TODO hurt the player
+                }
+            }
+        }
         playerSprite.setPosition(newx, newy);
         playerRect.setY(newy);
         playerRect.setX(newx);
@@ -64,14 +75,6 @@ public class Player extends Character{
         return playerRect.getY();
     }
 
-    public Texture getPlayerImage() {
-        return playerImage;
-    }
-
-    public void setPlayerImage(Texture playerImage) {
-        this.playerImage = playerImage;
-    }
-
     public Sprite getPlayerSprite() {
         return playerSprite;
     }
@@ -94,18 +97,6 @@ public class Player extends Character{
 
     public void setPlayerRect(Rectangle playerRect) {
         this.playerRect = playerRect;
-    }
-
-    public int getPlayerHealth() {
-        return playerHealth;
-    }
-
-    public void setPlayerHealth(int playerHealth) {
-        this.playerHealth = playerHealth;
-    }
-
-    public void dispose(){
-        playerImage.dispose();
     }
 
     public void rotate(Vector2 vec) {

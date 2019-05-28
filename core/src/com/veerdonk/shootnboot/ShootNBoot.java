@@ -87,9 +87,7 @@ public class ShootNBoot extends ApplicationAdapter {
 				playerSprite,
 				5,
 				400,
-				50,
-				100,
-				bp
+				50
 		);
 		touchpadController = new TouchpadController(
 				new Texture(Gdx.files.internal("touchBack.png")),
@@ -125,9 +123,14 @@ public class ShootNBoot extends ApplicationAdapter {
 		tiledMapRenderer.setView(cameraController.getCamera());
 		tiledMapRenderer.render();
 
+
 		player.move(
 				touchpadController.xPercent(),
-				touchpadController.yPercent()
+				touchpadController.yPercent(),
+				getCollisionMapNodes(new Vector2 (
+								touchpadController.xPercent(),
+								touchpadController.yPercent()),
+								getCurrentMapNode(player.getX(), player.getY()))
 		);
 		if(rotationTouchpadController.getTouchpad().isTouched()){
 			Vector2 rotVec = new Vector2(
@@ -240,6 +243,5 @@ public class ShootNBoot extends ApplicationAdapter {
 	@Override
 	public void dispose () {
 		batch.dispose();
-		player.dispose();
 	}
 }
