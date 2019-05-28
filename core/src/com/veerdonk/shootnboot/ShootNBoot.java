@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
@@ -73,8 +74,9 @@ public class ShootNBoot extends ApplicationAdapter {
 			for(int j = 0; j < mapHeight/mapNodeHeight; j++){
 				mapNodes[i][j] = new MapNode(i*mapNodeWidth,j*mapNodeHeight,mapNodeWidth,mapNodeHeight, i, j);
 		}}
-		TiledMapTileLayer collisionObjectLayer = (TiledMapTileLayer)tiledMap.getLayers().get("Tile Layer 2"); //TODO check whether this is right
+		MapLayer collisionObjectLayer = tiledMap.getLayers().get("CollisionLayer"); //TODO check whether this is right
 		MapObjects mapObjects = collisionObjectLayer.getObjects();
+		Gdx.app.log("mapobjects: ", mapObjects.getByType(RectangleMapObject.class).toString());
 		for(RectangleMapObject rectangleMapObject : mapObjects.getByType(RectangleMapObject.class)){
 			int wallXNode = (int) rectangleMapObject.getRectangle().x/mapWidth;
 			int wallYNode = (int) rectangleMapObject.getRectangle().y/mapHeight;
@@ -217,26 +219,40 @@ public class ShootNBoot extends ApplicationAdapter {
 		Array<MapNode> collisonMapNodes = new Array<MapNode>();
 		int xNode = curMapNode.getxNode();
 		int yNode = curMapNode.getyNode();
-		if(direction.x < 0){
-			collisonMapNodes.add(mapNodes[xNode-1][yNode]);//get left node
-		}else if(direction.x > 0){
-			collisonMapNodes.add(mapNodes[xNode+1][yNode]);//get right node
+
+		//direction is down + left and were not on the bottom or leftmost node
+		if (direction.y < 0 && direction.x < 0 && xNode > 0 && yNode > 0) {
+			collisonMapNodes.add(mapNodes[xNode - 1][yNode - 1]);//get lower left node
 		}
-		if(direction.y < 0){
-			collisonMapNodes.add(mapNodes[xNode][yNode-1]);//get top node
-		}else if(direction.y > 0){
-			collisonMapNodes.add(mapNodes[xNode][yNode+1]);//get bottom node
+		//direction is left and were not on the leftmost node
+		if (direction.x < 0 && xNode > 0) {
+			collisonMapNodes.add(mapNodes[xNode - 1][yNode]);//get left node
 		}
-		if(direction.y < 0 && direction.x < 0){
-			collisonMapNodes.add(mapNodes[xNode-1][yNode-1]);//get lower left node
-		}else if(direction.y > 0 && direction.x > 0){
-			collisonMapNodes.add(mapNodes[xNode+1][yNode+1]);//get upper right node
+		//direction is up and right and were not on the topright node
+		if (direction.y > 0 && direction.x > 0 && xNode < mapWidth/mapNodeWidth && yNode < mapHeight/mapNodeHeight) {
+			collisonMapNodes.add(mapNodes[xNode + 1][yNode + 1]);//get upper right node
 		}
-		if(direction.y < 0 && direction.x > 0){
-			collisonMapNodes.add(mapNodes[xNode+1][yNode-1]);//get lower right node
-		}else if (direction.y > 0 && direction.x < 0){
-			collisonMapNodes.add(mapNodes[xNode-1][yNode+1]);//get upper left node
+		//direction is right and were not on the rightmost node
+		if (direction.x > 0 && xNode < mapWidth/mapNodeWidth) {
+			collisonMapNodes.add(mapNodes[xNode + 1][yNode]);//get right node
 		}
+		//direction is down and right and were not on the lowerright node
+		if (direction.y < 0 && direction.x > 0 && yNode > 0 && xNode < mapWidth/mapNodeWidth) {
+			collisonMapNodes.add(mapNodes[xNode + 1][yNode - 1]);//get lower right node
+		}
+		//direction is down and were not on the bottom node
+		if (direction.y < 0 && yNode > 0) {
+			collisonMapNodes.add(mapNodes[xNode][yNode - 1]);//get top node
+		}
+		//direction is up and left and were not on the upperleft node
+		if (direction.y > 0 &&  direction.x < 0  && xNode > 0 && yNode < mapHeight/mapNodeHeight) {
+			collisonMapNodes.add(mapNodes[xNode - 1][yNode + 1]);//get upper left node
+		}
+		//direction is up and were not on the top node
+		if (direction.y < 0 && yNode < mapHeight/mapNodeHeight) {
+			collisonMapNodes.add(mapNodes[xNode][yNode - 1]);//get top node
+		}
+
 		return collisonMapNodes;
 	}
 

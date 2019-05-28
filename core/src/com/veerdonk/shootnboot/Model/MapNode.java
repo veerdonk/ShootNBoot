@@ -26,6 +26,7 @@ public class MapNode {
         this.yNode = yNode;
         this.bulletsInTile = new Array<Bullet>();
         this.zombiesInTile = new Array<Zombie>();
+        this.wallsInTile = new Array<Rectangle>();
     }
 
     public void setAll(float x, float y, float width, float height, int xNode, int yNode){

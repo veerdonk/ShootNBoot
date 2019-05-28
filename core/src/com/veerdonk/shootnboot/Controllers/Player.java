@@ -1,5 +1,6 @@
 package com.veerdonk.shootnboot.Controllers;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
@@ -49,9 +50,7 @@ public class Player extends Character{
             }
         }
         playerSprite.setPosition(newx, newy);
-        playerRect.setY(newy);
-        playerRect.setX(newx);
-
+        playerRect.setPosition(newx, newy);
     }
 
     public Gun getWeapon() {
