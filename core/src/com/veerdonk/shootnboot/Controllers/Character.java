@@ -16,4 +16,5 @@ public class Character {
     public void setHealth(int health) {
         this.health = health;
     }
+
 }

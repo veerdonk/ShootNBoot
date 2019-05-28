@@ -7,7 +7,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -51,6 +53,7 @@ public class ShootNBoot extends ApplicationAdapter {
 	private int mapNodeWidth = 128;
 	private MapNode [] [] mapNodes;
 
+
 	private SpriteBatch batch;
 	private Stage stage;
 
@@ -60,6 +63,7 @@ public class ShootNBoot extends ApplicationAdapter {
 		bSprite = textureAtlas.createSprite("bulletYellow");
 		tiledMap = new TmxMapLoader().load("shootNBootMap.tmx");
 		tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+
 		mapProperties = tiledMap.getProperties();
 		mapHeight = mapProperties.get("mapHeight", Integer.class);
 		mapWidth = mapProperties.get("mapWidth", Integer.class);
@@ -69,7 +73,13 @@ public class ShootNBoot extends ApplicationAdapter {
 			for(int j = 0; j < mapHeight/mapNodeHeight; j++){
 				mapNodes[i][j] = new MapNode(i*mapNodeWidth,j*mapNodeHeight,mapNodeWidth,mapNodeHeight, i, j);
 		}}
-
+		TiledMapTileLayer collisionObjectLayer = (TiledMapTileLayer)tiledMap.getLayers().get("Tile Layer 2"); //TODO check whether this is right
+		MapObjects mapObjects = collisionObjectLayer.getObjects();
+		for(RectangleMapObject rectangleMapObject : mapObjects.getByType(RectangleMapObject.class)){
+			int wallXNode = (int) rectangleMapObject.getRectangle().x/mapWidth;
+			int wallYNode = (int) rectangleMapObject.getRectangle().y/mapHeight;
+			mapNodes[wallXNode][wallYNode].wallsInTile.add(rectangleMapObject.getRectangle());
+		}
 		batch = new SpriteBatch();
 		cameraController = new CameraController(800, 480);
 		Sprite playerSprite = textureAtlas.createSprite("survivor1_stand");
@@ -183,6 +193,11 @@ public class ShootNBoot extends ApplicationAdapter {
 				if(b.bulletRect.overlaps(p.getPlayerRect())){
 					p.getShot(b);
 					return true;
+				}
+			}
+			for(Rectangle rect : node.wallsInTile){
+				if(b.bulletRect.overlaps(rect)){
+					return true; //walls dont mind getting shot
 				}
 			}
 		}

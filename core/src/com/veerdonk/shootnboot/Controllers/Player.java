@@ -111,7 +111,5 @@ public class Player extends Character{
     public void rotate(Vector2 vec) {
         playerSprite.setRotation(vec.angle());
     }
-    public void shoot(Vector2 vec){
-        //TODO implement
-    }
+
 }

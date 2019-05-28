@@ -1,5 +1,6 @@
 package com.veerdonk.shootnboot.Model;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.veerdonk.shootnboot.Controllers.Player;
 import com.veerdonk.shootnboot.Controllers.Zombie;
@@ -14,7 +15,7 @@ public class MapNode {
     public Array<Bullet> bulletsInTile;
     public Array<Zombie> zombiesInTile;
     public Array<Player> playerInTile;
-    //public Array<Wall> wallsInTile;
+    public Array<Rectangle> wallsInTile;
 
     public MapNode(float x, float y, float width, float height, int xNode, int yNode) {
         this.x = x;
