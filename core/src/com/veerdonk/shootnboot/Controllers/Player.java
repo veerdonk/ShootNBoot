@@ -8,7 +8,7 @@ import com.veerdonk.shootnboot.Model.Bullet;
 import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Pools.BulletPool;
 
-public class Player {
+public class Player extends Character{
     private float width = 32f;
     private float height = 32f;
     private Texture playerImage;

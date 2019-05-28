@@ -145,14 +145,18 @@ public class ShootNBoot extends ApplicationAdapter {
 		firstGun.getGunSprite().draw(batch);
 		player.getPlayerSprite().draw(batch);
 
-		for(Bullet b : activeBullets){
-
-			b.update(getCurrentMapNode(b.position.x, b.position.y)); // update bullet
-
-			//TODO return bullets to pool after collision
-			bSprite.setRotation(b.angle - 90f);
-			bSprite.setPosition(b.position.x, b.position.y);
-			bSprite.draw(batch);
+		for(int i = 0; i < activeBullets.size; i++){
+			Bullet b = activeBullets.get(i);
+			b.update(); // update bullet
+			if(checkProjectileCollisions(b, getCollisionMapNodes(b.direction, getCurrentMapNode(b.position.x, b.position.y)))){
+				//bullet has collided with something -> return it to pool
+				b.reset();
+				activeBullets.removeIndex(i);
+			}else{
+				bSprite.setRotation(b.angle - 90f);
+				bSprite.setPosition(b.position.x, b.position.y);
+				bSprite.draw(batch);
+			}
 		}
 
 		batch.end();
@@ -165,6 +169,24 @@ public class ShootNBoot extends ApplicationAdapter {
 		final double deltaX = (x2 - x1);
 		final double result = Math.toDegrees(Math.atan2(deltaY, deltaX));
 		return (result < 0) ? (360d + result) : result;
+	}
+
+	public boolean checkProjectileCollisions(Bullet b, Array<MapNode> nodesToCheck){
+		for(MapNode node : nodesToCheck){
+			for(Zombie z : node.zombiesInTile){
+				if(b.bulletRect.overlaps(z.getZombieRect())){
+					z.getShot(b);
+					return true;
+				}
+			}
+			for(Player p : node.playerInTile){
+				if(b.bulletRect.overlaps(p.getPlayerRect())){
+					p.getShot(b);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public MapNode getCurrentMapNode(float x, float y){
@@ -188,12 +210,15 @@ public class ShootNBoot extends ApplicationAdapter {
 			collisonMapNodes.add(mapNodes[xNode][yNode+1]);//get bottom node
 		}
 		if(direction.y < 0 && direction.x < 0){
-			//lower left
-		}else if(direction.y < 0 && direction.x > 0){
-			//lower right
+			collisonMapNodes.add(mapNodes[xNode-1][yNode-1]);//get lower left node
+		}else if(direction.y > 0 && direction.x > 0){
+			collisonMapNodes.add(mapNodes[xNode+1][yNode+1]);//get upper right node
 		}
-
-
+		if(direction.y < 0 && direction.x > 0){
+			collisonMapNodes.add(mapNodes[xNode+1][yNode-1]);//get lower right node
+		}else if (direction.y > 0 && direction.x < 0){
+			collisonMapNodes.add(mapNodes[xNode-1][yNode+1]);//get upper left node
+		}
 		return collisonMapNodes;
 	}
 

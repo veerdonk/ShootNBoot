@@ -1,6 +1,8 @@
 package com.veerdonk.shootnboot.Model;
 
 import com.badlogic.gdx.utils.Array;
+import com.veerdonk.shootnboot.Controllers.Player;
+import com.veerdonk.shootnboot.Controllers.Zombie;
 
 public class MapNode {
     private float x;
@@ -9,7 +11,10 @@ public class MapNode {
     private float height;
     private int xNode;
     private int yNode;
-    public Array<Object> objectsInTile;
+    public Array<Bullet> bulletsInTile;
+    public Array<Zombie> zombiesInTile;
+    public Array<Player> playerInTile;
+    //public Array<Wall> wallsInTile;
 
     public MapNode(float x, float y, float width, float height, int xNode, int yNode) {
         this.x = x;
@@ -18,7 +23,8 @@ public class MapNode {
         this.height = height;
         this.xNode = xNode;
         this.yNode = yNode;
-        this.objectsInTile = new Array<Object>();
+        this.bulletsInTile = new Array<Bullet>();
+        this.zombiesInTile = new Array<Zombie>();
     }
 
     public void setAll(float x, float y, float width, float height, int xNode, int yNode){
@@ -82,11 +88,4 @@ public class MapNode {
         this.yNode = yNode;
     }
 
-    public Array<Object> getObjectsInTile() {
-        return objectsInTile;
-    }
-
-    public void setObjectsInTile(Array<Object> objectsInTile) {
-        this.objectsInTile = objectsInTile;
-    }
 }

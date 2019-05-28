@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.veerdonk.shootnboot.ShootNBoot;
 
-public class Zombie {
+public class Zombie extends Character{
     private float width = 32f;
     private float height = 32f;
     private Texture zombieImage;
@@ -51,4 +51,11 @@ public class Zombie {
                 ) + 180f);
     }
 
+    public Rectangle getZombieRect() {
+        return zombieRect;
+    }
+
+    public void setZombieRect(Rectangle zombieRect) {
+        this.zombieRect = zombieRect;
+    }
 }
