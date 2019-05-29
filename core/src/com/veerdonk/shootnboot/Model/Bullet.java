@@ -9,7 +9,7 @@ public class Bullet implements Pool.Poolable {
 
     public Vector2 position = new Vector2(-10,-10);
     public Rectangle bulletRect;
-    public float speed = 4f;
+    public float speed = 5f;
     public float angle;
     public Gun gun;
     public Vector2 direction;
@@ -32,7 +32,7 @@ public class Bullet implements Pool.Poolable {
         this.direction = direction.nor();
         this.angle = angle;
         this.gun = gun;
-        this.bulletRect = new Rectangle(pos.x, pos.y, 32,32); //TODO correct w/h to reflect actual bullet
+        this.bulletRect = new Rectangle(pos.x, pos.y, 5,5); //TODO correct w/h to reflect actual bullet
         direction.add(new Vector2(speed * MathUtils.cosDeg(angle), speed * MathUtils.sinDeg(angle)));
     }
 

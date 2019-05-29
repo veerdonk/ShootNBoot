@@ -7,10 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.maps.MapLayer;
-import com.badlogic.gdx.maps.MapObjects;
 import com.badlogic.gdx.maps.MapProperties;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
@@ -20,9 +17,9 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.BufferUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.veerdonk.shootnboot.Controllers.CameraController;
+import com.veerdonk.shootnboot.Controllers.CollisionController;
 import com.veerdonk.shootnboot.Controllers.Player;
 import com.veerdonk.shootnboot.Controllers.TouchpadController;
 import com.veerdonk.shootnboot.Controllers.Zombie;
@@ -37,6 +34,7 @@ public class ShootNBoot extends ApplicationAdapter {
 	private CameraController cameraController;
 	private TouchpadController touchpadController;
 	private TouchpadController rotationTouchpadController;
+	private CollisionController collisionController;
 
 	private final Array<Bullet> activeBullets = new Array<Bullet>();
 	private final BulletPool bp = new BulletPool();
@@ -50,8 +48,8 @@ public class ShootNBoot extends ApplicationAdapter {
 	MapProperties mapProperties;
 	int mapHeight;
 	int mapWidth;
-	private int mapNodeHeight = 128;
-	private int mapNodeWidth = 128;
+	private int mapNodeHeight = 64;
+	private int mapNodeWidth = 64;
 	private MapNode [] [] mapNodes;
 
 
@@ -64,6 +62,7 @@ public class ShootNBoot extends ApplicationAdapter {
 		bSprite = textureAtlas.createSprite("bulletYellow");
 		tiledMap = new TmxMapLoader().load("shootNBootMap.tmx");
 		tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
+		collisionController = new CollisionController();
 
 		mapProperties = tiledMap.getProperties();
 		mapHeight = mapProperties.get("mapHeight", Integer.class);
@@ -75,29 +74,31 @@ public class ShootNBoot extends ApplicationAdapter {
 				mapNodes[i][j] = new MapNode(i*mapNodeWidth,j*mapNodeHeight,mapNodeWidth,mapNodeHeight, i, j);
 		}}
 		TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("background"); //TODO check whether this is right
+		int total = 0;
 		for(int x = 0; x < mapWidth/layer.getTileWidth(); x++){
 		    for(int y = 0; y < mapHeight/layer.getTileHeight(); y++){
 		        if(layer.getCell(x,y) != null && layer.getCell(x, y).getTile().getProperties().containsKey("blocked")){
 		            mapNodes[x*32/mapNodeWidth][y*32/mapNodeHeight].wallsInTile.add(new Rectangle(x*32, y*32, 32, 32));
-		            Gdx.app.log("wall","found");
+		            total ++;
+
                 }
             }
         }
-
+		Gdx.app.log("total walls created",Integer.toString(total));
 //		for(RectangleMapObject rectangleMapObject : mapObjects.getByType(RectangleMapObject.class)){
 //			int wallXNode = (int) rectangleMapObject.getRectangle().x/mapWidth;
 //			int wallYNode = (int) rectangleMapObject.getRectangle().y/mapHeight;
 //			mapNodes[wallXNode][wallYNode].wallsInTile.add(rectangleMapObject.getRectangle());
 //		}
-		Gdx.app.log("walls in 0,0: ", mapNodes[0][0].wallsInTile.toString(","));
+		Gdx.app.log("walls in 48,2: ", Integer.toString(mapNodes[49][2].getxNode()));
 		batch = new SpriteBatch();
 		cameraController = new CameraController(800, 480);
 		Sprite playerSprite = textureAtlas.createSprite("survivor1_stand");
 		player = new Player(
 				playerSprite,
 				5,
-				400,
-				50
+				200,
+				200
 		);
 		touchpadController = new TouchpadController(
 				new Texture(Gdx.files.internal("touchBack.png")),
@@ -133,15 +134,19 @@ public class ShootNBoot extends ApplicationAdapter {
 		tiledMapRenderer.setView(cameraController.getCamera());
 		tiledMapRenderer.render();
 
-
-		player.move(
-				touchpadController.xPercent(),
-				touchpadController.yPercent(),
-				getCollisionMapNodes(new Vector2 (
-								touchpadController.xPercent(),
-								touchpadController.yPercent()),
-								getCurrentMapNode(player.getX(), player.getY()))
-		);
+		if(touchpadController.getTouchpad().isTouched()) {
+			if(!rotationTouchpadController.getTouchpad().isTouched()){
+				player.rotate(new Vector2(touchpadController.xPercent(), touchpadController.yPercent()));
+			}
+			player.move(
+					touchpadController.xPercent(),
+					touchpadController.yPercent(),
+					getCollisionMapNodes(new Vector2(
+									touchpadController.xPercent(),
+									touchpadController.yPercent()),
+							getCurrentMapNode(player.getX(), player.getY()))
+			);
+		}
 		if(rotationTouchpadController.getTouchpad().isTouched()){
 			Vector2 rotVec = new Vector2(
 					rotationTouchpadController.xPercent(),
@@ -172,15 +177,23 @@ public class ShootNBoot extends ApplicationAdapter {
 		for(int i = 0; i < activeBullets.size; i++){
 			Bullet b = activeBullets.get(i);
 			b.update(); // update bullet
-			if(checkProjectileCollisions(b, getCollisionMapNodes(b.direction, getCurrentMapNode(b.position.x, b.position.y)))){
-				//bullet has collided with something -> return it to pool
+			bSprite.setRotation(b.angle - 90f);
+			bSprite.setPosition(b.position.x, b.position.y);
+			bSprite.draw(batch);
+			Array<MapNode> collisionMapnodes = getCollisionMapNodes(b.direction, getCurrentMapNode(b.position.x, b.position.y));
+			for(MapNode node : collisionMapnodes){
+				for(Rectangle wallRect : node.wallsInTile)
+					if(collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x) ||
+							collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y)){
+						b.reset();
+						activeBullets.removeIndex(i);
+					}
+			}
+			if(outOfBounds(b.position.x, b.position.y)){
 				b.reset();
 				activeBullets.removeIndex(i);
-			}else{
-				bSprite.setRotation(b.angle - 90f);
-				bSprite.setPosition(b.position.x, b.position.y);
-				bSprite.draw(batch);
 			}
+
 		}
 
 		batch.end();
@@ -240,35 +253,39 @@ public class ShootNBoot extends ApplicationAdapter {
 			collisonMapNodes.add(mapNodes[xNode - 1][yNode - 1]);//get lower left node
 		}
 		//direction is left and were not on the leftmost node
-		if (direction.x < 0 && xNode > 0) {
+		if (direction.x < 0 && direction.y == 0 && xNode > 0) {
 			collisonMapNodes.add(mapNodes[xNode - 1][yNode]);//get left node
 		}
-		//direction is up and right and were not on the topright node
-		if (direction.y > 0 && direction.x > 0 && xNode < mapWidth/mapNodeWidth && yNode < mapHeight/mapNodeHeight) {
-			collisonMapNodes.add(mapNodes[xNode + 1][yNode + 1]);//get upper right node
-		}
 		//direction is right and were not on the rightmost node
-		if (direction.x > 0 && xNode < mapWidth/mapNodeWidth) {
+		if (direction.x > 0 && direction.y == 0 && xNode < mapWidth/mapNodeWidth-1) {
 			collisonMapNodes.add(mapNodes[xNode + 1][yNode]);//get right node
 		}
+		//direction is up and right and were not on the topright node
+		if (direction.y > 0 && direction.x > 0 && xNode < mapWidth/mapNodeWidth-1 && yNode < mapHeight/mapNodeHeight-1) {
+			collisonMapNodes.add(mapNodes[xNode + 1][yNode + 1]);//get upper right node
+		}
 		//direction is down and right and were not on the lowerright node
-		if (direction.y < 0 && direction.x > 0 && yNode > 0 && xNode < mapWidth/mapNodeWidth) {
+		if (direction.y < 0 && direction.x > 0 && yNode > 0 && xNode < mapWidth/mapNodeWidth-1) {
 			collisonMapNodes.add(mapNodes[xNode + 1][yNode - 1]);//get lower right node
 		}
 		//direction is down and were not on the bottom node
-		if (direction.y < 0 && yNode > 0) {
+		if (direction.y < 0 && direction.x == 0 && yNode > 0) {
 			collisonMapNodes.add(mapNodes[xNode][yNode - 1]);//get top node
 		}
 		//direction is up and left and were not on the upperleft node
-		if (direction.y > 0 &&  direction.x < 0  && xNode > 0 && yNode < mapHeight/mapNodeHeight) {
+		if (direction.y > 0 &&  direction.x < 0  && xNode > 0 && yNode < mapHeight/mapNodeHeight-1) {
 			collisonMapNodes.add(mapNodes[xNode - 1][yNode + 1]);//get upper left node
 		}
 		//direction is up and were not on the top node
-		if (direction.y > 0 && yNode < mapHeight/mapNodeHeight) {
+		if (direction.y > 0 && direction.x == 0 && yNode < mapHeight/mapNodeHeight-1) {
 			collisonMapNodes.add(mapNodes[xNode][yNode + 1]);//get top node
 		}
-
+		collisonMapNodes.add(curMapNode);
 		return collisonMapNodes;
+	}
+
+	public boolean outOfBounds(float x, float y){
+		return x < 0 || y < 0 || x > 3200 || y > 3200;
 	}
 
 	@Override
