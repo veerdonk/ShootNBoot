@@ -1,10 +1,12 @@
-package com.veerdonk.shootnboot.Controllers;
+package com.veerdonk.shootnboot.Model;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.veerdonk.shootnboot.Model.Bullet;
+import com.badlogic.gdx.utils.TimeUtils;
 
 public class Character {
     private int health = 100;
+    private long hitFreq = 100;
+    private long lastHit = TimeUtils.millis();
 
     public void getShot(Bullet b){
         this.health -= b.gun.getDamage();
@@ -16,6 +18,13 @@ public class Character {
 
     public void setHealth(int health) {
         this.health = health;
+    }
+
+    public void hurt(int damage){
+        if(TimeUtils.millis() - lastHit > hitFreq) {
+            this.health = this.health - damage;
+            lastHit = TimeUtils.millis();
+        }
     }
 
     public float getXOnCollision(float percentX, Rectangle rect, float newx){
@@ -34,5 +43,9 @@ public class Character {
             newy = rect.y - rect.height - 1;
         }
         return newy;
+    }
+
+    public void setHitFreq(long hitFreq) {
+        this.hitFreq = hitFreq;
     }
 }

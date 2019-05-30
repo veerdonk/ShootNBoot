@@ -1,9 +1,7 @@
 package com.veerdonk.shootnboot.Model;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
-import com.veerdonk.shootnboot.Controllers.Player;
 
 public class Gun {
     private Sprite gunSprite;
@@ -14,29 +12,32 @@ public class Gun {
     private float x;
     private float y;
     private Rectangle gunRect;
+    public boolean pickedUp = false;
 
     public Gun(Sprite gunSprite, Sprite playerGunSprite, GunType gunType, float x, float y) {
         this.playerGunSprite = playerGunSprite;
         this.gunSprite = gunSprite;
         this.gunType = gunType;
+        this.x = x;
+        this.y = y;
         this.gunSprite.setPosition(x, y);
         this.gunRect = new Rectangle(x, y, 5, 5);
         switch (gunType){
             case PISTOL:
-                this.fireRate = 5;
-                this.damage = 5;
+                this.fireRate = 400;
+                this.damage = 20;
                 break;
             case SHOTGUN:
-                this.fireRate = 2;
-                this.damage = 2;
+                this.fireRate = 1000;
+                this.damage = 10;
                 break;
             case MACHINEGUN:
-                this.fireRate = 10;
-                this.damage = 8;
+                this.fireRate = 300;
+                this.damage = 18;
                 break;
             case SUBMACHINE:
-                this.fireRate = 15;
-                this.damage = 3;
+                this.fireRate = 250;
+                this.damage = 14;
                 break;
         }
     }
@@ -47,6 +48,30 @@ public class Gun {
 
     public void setPlayerGunSprite(Sprite playerGunSprite) {
         this.playerGunSprite = playerGunSprite;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public Rectangle getGunRect() {
+        return gunRect;
+    }
+
+    public void setGunRect(Rectangle gunRect) {
+        this.gunRect = gunRect;
     }
 
     public Sprite getGunSprite() {

@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
@@ -17,17 +18,22 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.veerdonk.shootnboot.Controllers.CameraController;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
-import com.veerdonk.shootnboot.Controllers.Player;
+import com.veerdonk.shootnboot.Model.Explosion;
+import com.veerdonk.shootnboot.Model.Player;
 import com.veerdonk.shootnboot.Controllers.TouchpadController;
-import com.veerdonk.shootnboot.Controllers.Zombie;
+import com.veerdonk.shootnboot.Model.Zombie;
 import com.veerdonk.shootnboot.Model.Bullet;
 import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Model.GunType;
 import com.veerdonk.shootnboot.Model.MapNode;
 import com.veerdonk.shootnboot.Pools.BulletPool;
+import com.veerdonk.shootnboot.Pools.ZombiePool;
+
+import java.util.Random;
 
 public class ShootNBoot extends ApplicationAdapter {
 	private Player player;
@@ -36,12 +42,26 @@ public class ShootNBoot extends ApplicationAdapter {
 	private TouchpadController rotationTouchpadController;
 	private CollisionController collisionController;
 
+	private Array<Zombie> activeZombies;
+	private long zombieSpawnRate;
+	private long lastZombie;
+	private Sprite zombieSprite;
+	private float zombieSpeed;
+	private int zombieDamage;
+	private final ZombiePool zp = new ZombiePool();
+	private Array<Explosion> activeExplosions = new Array<Explosion>();
+	private Array<TextureRegion> zombieExplosionTextures;
+
 	private final Array<Bullet> activeBullets = new Array<Bullet>();
 	private final BulletPool bp = new BulletPool();
 	private Sprite bSprite;
+	private long now = TimeUtils.millis();
+	private long lastShot = now;
 
 	private TextureAtlas textureAtlas;
 	private Gun firstGun;
+	private Gun firstShotGun;
+	private Array<Gun> activeGuns = new Array<Gun>();
 
 	TiledMap tiledMap;
 	TiledMapRenderer tiledMapRenderer;
@@ -63,7 +83,13 @@ public class ShootNBoot extends ApplicationAdapter {
 		tiledMap = new TmxMapLoader().load("shootNBootMap.tmx");
 		tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 		collisionController = new CollisionController();
-
+		zombieExplosionTextures = new Array<TextureRegion>();
+		zombieExplosionTextures.add(
+				textureAtlas.findRegion("smokeYellow0"),
+				textureAtlas.findRegion("smokeYellow1"),
+				textureAtlas.findRegion("smokeYellow2"),
+				textureAtlas.findRegion("smokeYellow3"));
+		activeExplosions.add(new Explosion(100, 100, zombieExplosionTextures));
 		mapProperties = tiledMap.getProperties();
 		mapHeight = mapProperties.get("mapHeight", Integer.class);
 		mapWidth = mapProperties.get("mapWidth", Integer.class);
@@ -84,13 +110,14 @@ public class ShootNBoot extends ApplicationAdapter {
                 }
             }
         }
-		Gdx.app.log("total walls created",Integer.toString(total));
-//		for(RectangleMapObject rectangleMapObject : mapObjects.getByType(RectangleMapObject.class)){
-//			int wallXNode = (int) rectangleMapObject.getRectangle().x/mapWidth;
-//			int wallYNode = (int) rectangleMapObject.getRectangle().y/mapHeight;
-//			mapNodes[wallXNode][wallYNode].wallsInTile.add(rectangleMapObject.getRectangle());
-//		}
-		Gdx.app.log("walls in 48,2: ", Integer.toString(mapNodes[49][2].getxNode()));
+
+		activeZombies = new Array<Zombie>();
+		zombieSpawnRate = 5000;//spawnrate in millis
+		zombieSpeed = 1.5f;
+		lastZombie = now;
+		zombieDamage = 5;
+		zombieSprite = textureAtlas.createSprite("zoimbie1_hold");
+
 		batch = new SpriteBatch();
 		cameraController = new CameraController(800, 480);
 		Sprite playerSprite = textureAtlas.createSprite("survivor1_stand");
@@ -98,8 +125,10 @@ public class ShootNBoot extends ApplicationAdapter {
 				playerSprite,
 				5,
 				200,
-				200
+				200,
+				getCurrentMapNode(200,200)
 		);
+		player.currentNode.playerInTile.add(player);
 		touchpadController = new TouchpadController(
 				new Texture(Gdx.files.internal("touchBack.png")),
 				new Texture(Gdx.files.internal("touchKnob.png")),
@@ -116,8 +145,13 @@ public class ShootNBoot extends ApplicationAdapter {
 				150,
 				150
 		);
+		//TODO make guns randomly appear (powerups?)
 		firstGun = new Gun(textureAtlas.createSprite("weapon_gun"), textureAtlas.createSprite("survivor1_gun"), GunType.PISTOL, 200f, 100f);
-
+		firstShotGun = new Gun(textureAtlas.createSprite("weapon_shotgun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
+		getCurrentMapNode(firstGun.getX(), firstGun.getY()).gunsInTile.add(firstGun);
+		getCurrentMapNode(firstShotGun.getX(), firstShotGun.getY()).gunsInTile.add(firstShotGun);
+		activeGuns.add(firstGun);
+		activeGuns.add(firstShotGun);
 		stage = new Stage(new FitViewport(800, 480, new CameraController(800, 480).getCamera()), batch);
 		stage.addActor(touchpadController.getTouchpad());
 		stage.addActor(rotationTouchpadController.getTouchpad());
@@ -133,46 +167,75 @@ public class ShootNBoot extends ApplicationAdapter {
 		cameraController.getCamera().update();
 		tiledMapRenderer.setView(cameraController.getCamera());
 		tiledMapRenderer.render();
+		now = TimeUtils.millis();
+		///////////////Player movement////////////////////
+		//	Handles touchpads/rotation/movement/etc		//
 
 		if(touchpadController.getTouchpad().isTouched()) {
-			if(!rotationTouchpadController.getTouchpad().isTouched()){
+			if (!rotationTouchpadController.getTouchpad().isTouched()) {
 				player.rotate(new Vector2(touchpadController.xPercent(), touchpadController.yPercent()));
 			}
-			player.move(
-					touchpadController.xPercent(),
-					touchpadController.yPercent(),
-					getCollisionMapNodes(new Vector2(
-									touchpadController.xPercent(),
-									touchpadController.yPercent()),
-							getCurrentMapNode(player.getX(), player.getY()))
-			);
 		}
-		if(rotationTouchpadController.getTouchpad().isTouched()){
+		player.move(
+				touchpadController.xPercent(),
+				touchpadController.yPercent(),
+				getCollisionMapNodes(new Vector2(
+								touchpadController.xPercent(),
+								touchpadController.yPercent()),
+								player.currentNode)
+		);
+
+		if(rotationTouchpadController.getTouchpad().isTouched()) {
 			Vector2 rotVec = new Vector2(
 					rotationTouchpadController.xPercent(),
 					rotationTouchpadController.yPercent());
 			player.rotate(rotVec);
-            Gdx.app.log("KnobX", Float.toString(rotVec.x));
-            Gdx.app.log("KnobY", Float.toString(rotVec.y));
 			//fires a bullet when the right touchpad is touched
-			Bullet b = bp.obtain();
-			b.fire( new Vector2(
-					    player.getX(),
-					    player.getY()),
-					new Vector2(
-					        rotVec.x,
-					    rotVec.y),
-					rotVec.angle(),
-                    player.getWeapon()
+
+			if (player.getWeapon() != null) {
+				if (now - lastShot > player.getWeapon().getFireRate()) {
+					Bullet b = bp.obtain();
+					b.fire(new Vector2(
+									player.getX(),
+									player.getY()),
+							new Vector2(
+									rotVec.x,
+									rotVec.y),
+							rotVec.angle(),
+							player.getWeapon()
 					);
-			activeBullets.add(b);
+					activeBullets.add(b);
+					lastShot = now;
+				}
+
+			}
 		}
+		//Gdx.app.log("player mapnode", player.currentNode.toString());
+		player.currentNode.playerInTile.removeIndex(0);//remove from old node
+		player.currentNode = getCurrentMapNode(player.getX(), player.getY());//update node
+		player.currentNode.playerInTile.add(player);//add player to updated node
+
+
+		////////////////////////////////////////////////
 
 		batch.setProjectionMatrix(cameraController.getCamera().combined);
 		batch.begin();
+		for(Explosion explosion : activeExplosions){
+			explosion.update(Gdx.graphics.getDeltaTime());
+			explosion.render(batch);
+		}
+		for(int i = 0; i < activeGuns.size; i++){
+			if(!activeGuns.get(i).pickedUp) {
+				activeGuns.get(i).getGunSprite().draw(batch);
+			}else{
+				activeGuns.removeIndex(i);
+			}
+		}
 
-		firstGun.getGunSprite().draw(batch);
 		player.getPlayerSprite().draw(batch);
+
+
+		///////////////Bullets stuff//////////////////
 
 		for(int i = 0; i < activeBullets.size; i++){
 			Bullet b = activeBullets.get(i);
@@ -183,11 +246,19 @@ public class ShootNBoot extends ApplicationAdapter {
 			Array<MapNode> collisionMapnodes = getCollisionMapNodes(b.direction, getCurrentMapNode(b.position.x, b.position.y));
 			for(MapNode node : collisionMapnodes){
 				for(Rectangle wallRect : node.wallsInTile)
-					if(collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x) ||
-							collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y)){
+					if(collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x, false) ||
+							collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y, false)){
 						b.reset();
 						activeBullets.removeIndex(i);
 					}
+				for(Zombie zombie : node.zombiesInTile){
+					if(collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false)||
+							collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)){
+						zombie.hurt(b.gun.getDamage());
+						b.reset();
+						activeBullets.removeIndex(i);
+					}
+				}
 			}
 			if(outOfBounds(b.position.x, b.position.y)){
 				b.reset();
@@ -195,6 +266,25 @@ public class ShootNBoot extends ApplicationAdapter {
 			}
 
 		}
+		////////////////////////////////////////////////
+
+		///////////////Zombie stuff////////////////////
+		spawnZombie();
+		for(int i = 0; i < activeZombies.size; i++){
+			Zombie zombie = activeZombies.get(i);
+			MapNode curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
+			curMapNode.removeZombieFromArray(zombie);
+			zombie.move(player.getX(),player.getY());
+			if(zombie.getHealth() <= 0){
+				activeZombies.removeIndex(i);
+				zombie.reset();
+			}
+			zombie.getZombieSprite().draw(batch);
+			curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
+			curMapNode.zombiesInTile.add(zombie);
+		}
+ 		////////////////////////////////////////
+
 
 		batch.end();
 		stage.act(Gdx.graphics.getDeltaTime());
@@ -206,35 +296,6 @@ public class ShootNBoot extends ApplicationAdapter {
 		final double deltaX = (x2 - x1);
 		final double result = Math.toDegrees(Math.atan2(deltaY, deltaX));
 		return (result < 0) ? (360d + result) : result;
-	}
-
-	public boolean checkProjectileCollisions(Bullet b, Array<MapNode> nodesToCheck){
-		for(MapNode node : nodesToCheck){
-			if(node.zombiesInTile != null) {
-				for (Zombie z : node.zombiesInTile) {
-					if (b.bulletRect.overlaps(z.getZombieRect())) {
-						z.getShot(b);
-						return true;
-					}
-				}
-			}
-			if(node.playerInTile != null) {
-				for (Player p : node.playerInTile) {
-					if (b.bulletRect.overlaps(p.getPlayerRect())) {
-						p.getShot(b);
-						return true;
-					}
-				}
-			}
-			if(node.wallsInTile != null) {
-				for (Rectangle rect : node.wallsInTile) {
-					if (b.bulletRect.overlaps(rect)) {
-						return true; //walls dont mind getting shot
-					}
-				}
-			}
-		}
-		return false;
 	}
 
 	public MapNode getCurrentMapNode(float x, float y){
@@ -282,6 +343,20 @@ public class ShootNBoot extends ApplicationAdapter {
 		}
 		collisonMapNodes.add(curMapNode);
 		return collisonMapNodes;
+	}
+
+	public void spawnZombie(){
+		if(now - lastZombie > zombieSpawnRate){
+			lastZombie = now;
+			Random random = new Random();
+
+			float zombieX = 50 + random.nextInt( 3150 - 50);
+			float zombieY = 50 + random.nextInt(3150 - 50);
+			Zombie zombie = zp.obtain();
+			zombie.sendZombie(zombieSprite, zombieSpeed, zombieX, zombieY, zombieDamage);
+			activeZombies.add(zombie);
+		}
+
 	}
 
 	public boolean outOfBounds(float x, float y){
