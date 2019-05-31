@@ -54,7 +54,7 @@ public class Player extends Character {
 
     public void getXp(int gottenXp){
         xp += gottenXp;
-        if(xp > (level/levelConstant)*(level/levelConstant)){ 
+        if(xp > (level/levelConstant)*(level/levelConstant)){
             levelup();
         }
     }
