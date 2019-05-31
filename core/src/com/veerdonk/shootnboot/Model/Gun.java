@@ -13,6 +13,7 @@ public class Gun {
     private float y;
     private Rectangle gunRect;
     public boolean pickedUp = false;
+    private float knockBack;
 
     public Gun(Sprite gunSprite, Sprite playerGunSprite, GunType gunType, float x, float y) {
         this.playerGunSprite = playerGunSprite;
@@ -22,22 +23,27 @@ public class Gun {
         this.y = y;
         this.gunSprite.setPosition(x, y);
         this.gunRect = new Rectangle(x, y, 5, 5);
+
         switch (gunType){
             case PISTOL:
                 this.fireRate = 400;
                 this.damage = 20;
+                this.knockBack = 5f;
                 break;
             case SHOTGUN:
                 this.fireRate = 1000;
                 this.damage = 10;
+                this.knockBack = 8f;
                 break;
             case MACHINEGUN:
                 this.fireRate = 300;
                 this.damage = 18;
+                this.knockBack = 5f;
                 break;
             case SUBMACHINE:
                 this.fireRate = 250;
                 this.damage = 14;
+                this.knockBack = 3f;
                 break;
         }
     }
@@ -48,6 +54,11 @@ public class Gun {
 
     public void setPlayerGunSprite(Sprite playerGunSprite) {
         this.playerGunSprite = playerGunSprite;
+    }
+
+    public void setPosition(float x, float y){
+        setX(x);
+        setY(y);
     }
 
     public float getX() {
@@ -104,6 +115,10 @@ public class Gun {
 
     public void setDamage(int damage) {
         this.damage = damage;
+    }
+
+    public float getKnockBack() {
+        return knockBack;
     }
 }
 

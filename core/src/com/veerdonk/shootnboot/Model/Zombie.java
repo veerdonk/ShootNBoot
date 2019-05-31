@@ -4,8 +4,9 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
-import com.veerdonk.shootnboot.Controllers.CollisionController;
 import com.veerdonk.shootnboot.ShootNBoot;
+
+import java.util.Objects;
 
 public class Zombie extends Character implements Pool.Poolable {
     private float width = 15f;
@@ -14,6 +15,7 @@ public class Zombie extends Character implements Pool.Poolable {
     private float zombieSpeed;
     private Rectangle zombieRect;
     private int damage;
+    private int xpValue = 30;
 
     public void sendZombie(Sprite zombieSprite, float zombieSpeed, float initialX, float initialY, int damage) {
         this.zombieSprite = zombieSprite;
@@ -75,9 +77,31 @@ public class Zombie extends Character implements Pool.Poolable {
         this.damage = damage;
     }
 
+    public int getXpValue() {
+        return xpValue;
+    }
+
+    public void setXpValue(int xpValue) {
+        this.xpValue = xpValue;
+    }
+
     @Override
     public void reset() {
-        this.zombieRect.setPosition(0, 0);
-        this.zombieSprite.setPosition(0, 0);
+        this.zombieRect = null;
+        this.zombieSprite = null;
+        this.setHealth(100);
+    }
+
+    public void recoil(Vector2 hurtDir) {
+        zombieRect.x += hurtDir.x;
+        zombieRect.y += hurtDir.y;
+        zombieSprite.setPosition(zombieSprite.getX() + hurtDir.x, zombieSprite.getY() + hurtDir.y);
+    }
+
+    @Override
+    public String toString() {
+        return "Zombie{" +
+                "zombieRect=" + zombieRect +
+                '}';
     }
 }

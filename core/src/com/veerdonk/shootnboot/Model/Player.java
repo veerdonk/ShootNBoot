@@ -17,6 +17,9 @@ public class Player extends Character {
     private Gun weapon;
     private CollisionController cc;
     public MapNode currentNode;
+    private float levelConstant = 0.2f;
+    private int xp = 0;
+    private int level = 1;
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode) {
         this.playerSprite = playSprite;
@@ -49,9 +52,26 @@ public class Player extends Character {
         this.playerSprite = weapon.getPlayerGunSprite();
     }
 
-    public void pickupGun(Gun gun){
-        this.weapon = gun;
-        this.playerSprite = gun.getPlayerGunSprite();
+    public void getXp(int gottenXp){
+        xp += gottenXp;
+        if(xp > (level/levelConstant)*(level/levelConstant)){ 
+            levelup();
+        }
+    }
+
+    public void levelup(){
+        level += 1;
+        setMaxHealth(getMaxHealth() + 10);
+        heal(10);
+        getWeapon().setDamage(getWeapon().getDamage() + 1);
+        Gdx.app.log("Ding! level", Integer.toString(level));
+    }
+
+    public void heal(int amount){
+        setHealth(getHealth() + amount);
+        if(getHealth() > getMaxHealth()) {
+            setHealth(getMaxHealth());
+        }
     }
 
     public float getX(){
@@ -66,10 +86,6 @@ public class Player extends Character {
         return playerSprite;
     }
 
-    public void setPlayerSprite(Sprite playerSprite) {
-        this.playerSprite = playerSprite;
-    }
-
     public float getPlayerSpeed() {
         return playerSpeed;
     }
@@ -82,9 +98,6 @@ public class Player extends Character {
         return playerRect;
     }
 
-    public void setPlayerRect(Rectangle playerRect) {
-        this.playerRect = playerRect;
-    }
 
     public void rotate(Vector2 vec) {
         playerSprite.setRotation(vec.angle());

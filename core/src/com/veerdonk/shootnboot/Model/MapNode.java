@@ -32,7 +32,7 @@ public class MapNode {
 
     public void removeZombieFromArray(Zombie zombie){
         for(int i = 0; i < zombiesInTile.size; i++){
-            if(zombie.equals(zombiesInTile.get(i))){
+            if(zombie == zombiesInTile.get(i)){
                 zombiesInTile.removeIndex(i);
             }
         }

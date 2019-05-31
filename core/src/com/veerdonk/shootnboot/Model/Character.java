@@ -7,6 +7,7 @@ public class Character {
     private int health = 100;
     private long hitFreq = 100;
     private long lastHit = TimeUtils.millis();
+    private int maxHealth = 100;
 
     public void getShot(Bullet b){
         this.health -= b.gun.getDamage();
@@ -47,5 +48,13 @@ public class Character {
 
     public void setHitFreq(long hitFreq) {
         this.hitFreq = hitFreq;
+    }
+
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+
+    public void setMaxHealth(int maxHealth) {
+        this.maxHealth = maxHealth;
     }
 }

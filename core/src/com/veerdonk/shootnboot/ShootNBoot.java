@@ -2,6 +2,7 @@ package com.veerdonk.shootnboot;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -36,6 +37,7 @@ import com.veerdonk.shootnboot.Pools.ZombiePool;
 import java.util.Random;
 
 public class ShootNBoot extends ApplicationAdapter {
+	private float delta = 0;
 	private Player player;
 	private CameraController cameraController;
 	private TouchpadController touchpadController;
@@ -50,7 +52,8 @@ public class ShootNBoot extends ApplicationAdapter {
 	private int zombieDamage;
 	private final ZombiePool zp = new ZombiePool();
 	private Array<Explosion> activeExplosions = new Array<Explosion>();
-	private Array<TextureRegion> zombieExplosionTextures;
+	private Array<TextureRegion> explosionTextures;
+	private Texture blank;
 
 	private final Array<Bullet> activeBullets = new Array<Bullet>();
 	private final BulletPool bp = new BulletPool();
@@ -79,17 +82,13 @@ public class ShootNBoot extends ApplicationAdapter {
 	@Override
 	public void create () {
 		textureAtlas = new TextureAtlas(Gdx.files.internal("Characters.atlas"));
-		bSprite = textureAtlas.createSprite("bulletYellow");
+		blank = new Texture(Gdx.files.internal("blank_1px.png"));
+		bSprite = textureAtlas.createSprite("bulletSand1_outline");
 		tiledMap = new TmxMapLoader().load("shootNBootMap.tmx");
 		tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 		collisionController = new CollisionController();
-		zombieExplosionTextures = new Array<TextureRegion>();
-		zombieExplosionTextures.add(
-				textureAtlas.findRegion("smokeYellow0"),
-				textureAtlas.findRegion("smokeYellow1"),
-				textureAtlas.findRegion("smokeYellow2"),
-				textureAtlas.findRegion("smokeYellow3"));
-		activeExplosions.add(new Explosion(100, 100, zombieExplosionTextures));
+		explosionTextures = new Array<TextureRegion>();
+		explosionTextures.addAll(textureAtlas.findRegions("explosion"));
 		mapProperties = tiledMap.getProperties();
 		mapHeight = mapProperties.get("mapHeight", Integer.class);
 		mapWidth = mapProperties.get("mapWidth", Integer.class);
@@ -100,13 +99,11 @@ public class ShootNBoot extends ApplicationAdapter {
 				mapNodes[i][j] = new MapNode(i*mapNodeWidth,j*mapNodeHeight,mapNodeWidth,mapNodeHeight, i, j);
 		}}
 		TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("background"); //TODO check whether this is right
-		int total = 0;
+
 		for(int x = 0; x < mapWidth/layer.getTileWidth(); x++){
 		    for(int y = 0; y < mapHeight/layer.getTileHeight(); y++){
 		        if(layer.getCell(x,y) != null && layer.getCell(x, y).getTile().getProperties().containsKey("blocked")){
 		            mapNodes[x*32/mapNodeWidth][y*32/mapNodeHeight].wallsInTile.add(new Rectangle(x*32, y*32, 32, 32));
-		            total ++;
-
                 }
             }
         }
@@ -160,6 +157,7 @@ public class ShootNBoot extends ApplicationAdapter {
 
 	@Override
 	public void render () {
+		delta += Gdx.graphics.getDeltaTime();
 		//Open GL stuff to set clear color and clear the screen
 		Gdx.gl.glClearColor(0, 0 ,0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -194,20 +192,38 @@ public class ShootNBoot extends ApplicationAdapter {
 
 			if (player.getWeapon() != null) {
 				if (now - lastShot > player.getWeapon().getFireRate()) {
-					Bullet b = bp.obtain();
-					b.fire(new Vector2(
-									player.getX(),
-									player.getY()),
-							new Vector2(
-									rotVec.x,
-									rotVec.y),
-							rotVec.angle(),
-							player.getWeapon()
-					);
-					activeBullets.add(b);
-					lastShot = now;
+					if (player.getWeapon().getGunType() == GunType.SHOTGUN) {
+						//fire multiple bullets with spread
+						for (int i = 0; i < 6; i++) {
+							Bullet b = bp.obtain();
+							b.fireRandom(new Vector2(
+											player.getX(),
+											player.getY()),
+									new Vector2(
+											rotVec.x,
+											rotVec.y),
+									rotVec.angle(),
+									player.getWeapon(),
+									25
+							);
+							activeBullets.add(b);
+							lastShot = now;
+						}
+					} else {
+						Bullet b = bp.obtain();
+						b.fire(new Vector2(
+										player.getX(),
+										player.getY()),
+								new Vector2(
+										rotVec.x,
+										rotVec.y),
+								rotVec.angle(),
+								player.getWeapon()
+						);
+						activeBullets.add(b);
+						lastShot = now;
+					}
 				}
-
 			}
 		}
 		//Gdx.app.log("player mapnode", player.currentNode.toString());
@@ -220,17 +236,31 @@ public class ShootNBoot extends ApplicationAdapter {
 
 		batch.setProjectionMatrix(cameraController.getCamera().combined);
 		batch.begin();
-		for(Explosion explosion : activeExplosions){
+		for(int i = 0; i < activeExplosions.size; i++){
+			Explosion explosion = activeExplosions.get(i);
 			explosion.update(Gdx.graphics.getDeltaTime());
 			explosion.render(batch);
+			if(explosion.remove){
+				activeExplosions.removeIndex(i);
+			}
 		}
 		for(int i = 0; i < activeGuns.size; i++){
 			if(!activeGuns.get(i).pickedUp) {
 				activeGuns.get(i).getGunSprite().draw(batch);
 			}else{
+				activeGuns.get(i).setPosition(0,0);
 				activeGuns.removeIndex(i);
 			}
 		}
+
+		drawHealth(
+				player.getX(),
+				player.getY() - 12,
+				50,
+				5,
+				batch,
+				player.getHealth(),
+				player.getMaxHealth());
 
 		player.getPlayerSprite().draw(batch);
 
@@ -248,20 +278,26 @@ public class ShootNBoot extends ApplicationAdapter {
 				for(Rectangle wallRect : node.wallsInTile)
 					if(collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x, false) ||
 							collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y, false)){
-						b.reset();
+						bp.free(b);
 						activeBullets.removeIndex(i);
 					}
 				for(Zombie zombie : node.zombiesInTile){
+					//Gdx.app.log("zombie in tile", zombie.getZombieRect().toString());
 					if(collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false)||
 							collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)){
 						zombie.hurt(b.gun.getDamage());
-						b.reset();
+						node.removeZombieFromArray(zombie);
+						zombie.recoil(b.calculateDirection(b.gun.getKnockBack(), b.direction.angle()));
+						getCurrentMapNode(zombie.getX(), zombie.getY()).zombiesInTile.add(zombie);//update zombie array of node incase it was bumped to another node
+						Explosion explosion = new Explosion(b.position.x, b.position.y, explosionTextures, 16, Color.WHITE);
+						activeExplosions.add(explosion);
+						bp.free(b);
 						activeBullets.removeIndex(i);
 					}
 				}
 			}
 			if(outOfBounds(b.position.x, b.position.y)){
-				b.reset();
+				bp.free(b);
 				activeBullets.removeIndex(i);
 			}
 
@@ -273,15 +309,31 @@ public class ShootNBoot extends ApplicationAdapter {
 		for(int i = 0; i < activeZombies.size; i++){
 			Zombie zombie = activeZombies.get(i);
 			MapNode curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
+//			for(Zombie z : curMapNode.zombiesInTile){
+//				Gdx.app.log("in tile before", z.toString());
+//			}
 			curMapNode.removeZombieFromArray(zombie);
 			zombie.move(player.getX(),player.getY());
+
+			if(zombie.getHealth() < 100){
+				drawHealth(zombie.getX(),
+						zombie.getY() + 45,
+						43,
+						5,
+						batch,
+						zombie.getHealth(),
+						zombie.getMaxHealth());
+			}
 			if(zombie.getHealth() <= 0){
 				activeZombies.removeIndex(i);
-				zombie.reset();
+				activeExplosions.add(new Explosion(zombie.getX(), zombie.getY(), explosionTextures, 40, Color.GREEN));
+				zp.free(zombie);
+				player.getXp(zombie.getXpValue());
+			}else {
+				zombie.getZombieSprite().draw(batch);
+				curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
+				curMapNode.zombiesInTile.add(zombie);
 			}
-			zombie.getZombieSprite().draw(batch);
-			curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
-			curMapNode.zombiesInTile.add(zombie);
 		}
  		////////////////////////////////////////
 
@@ -359,8 +411,29 @@ public class ShootNBoot extends ApplicationAdapter {
 
 	}
 
+	public void drawHealth(float x, float y, float width, float height, SpriteBatch batch, int health, int maxHealth){
+		float healthPerc = (float) health / (float) maxHealth;
+		if(healthPerc > 0.6f){
+			batch.setColor(Color.GREEN);
+		}else if(healthPerc > 0.2f){
+			batch.setColor(Color.ORANGE);
+		}else{
+			batch.setColor(Color.RED);
+		}
+		batch.draw(blank, x, y, width * healthPerc, height);
+		batch.setColor(Color.WHITE);
+	}
+
 	public boolean outOfBounds(float x, float y){
 		return x < 0 || y < 0 || x > 3200 || y > 3200;
+	}
+
+	public void increaseDifficulty(int kills, long timePassed){
+//		if(kills % )
+		if(zombieSpawnRate > 100){
+			zombieSpawnRate -= 200;
+		}
+
 	}
 
 	@Override
