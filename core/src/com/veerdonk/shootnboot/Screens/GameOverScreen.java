@@ -6,12 +6,12 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.veerdonk.shootnboot.ShootNBoot;
 
-public class MainMenuScreen implements Screen {
+public class GameOverScreen implements Screen {
 
     final ShootNBoot game;
     OrthographicCamera camera;
 
-    public MainMenuScreen(final ShootNBoot game) {
+    public GameOverScreen(final ShootNBoot game) {
         this.game = game;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
@@ -30,8 +30,8 @@ public class MainMenuScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-        game.font.draw(game.batch, "Welcome to ShootNBoot!!! ", 100, 150);
-        game.font.draw(game.batch, "Tap anywhere to begin!", 100, 100);
+        game.font.draw(game.batch, "Game Over... ", 100, 150);
+        game.font.draw(game.batch, "Tap anywhere to try again", 100, 100);
         game.batch.end();
         if(Gdx.input.isTouched()){
             game.setScreen(new GameScreen(game));

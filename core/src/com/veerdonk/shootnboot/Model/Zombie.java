@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
+import com.veerdonk.shootnboot.Screens.GameScreen;
 import com.veerdonk.shootnboot.ShootNBoot;
 
 import java.util.Objects;
@@ -45,7 +46,7 @@ public class Zombie extends Character implements Pool.Poolable {
         zombieRect.setY(getY() + destY * zombieSpeed);
         zombieSprite.setPosition(getX(), getY());
         zombieSprite.setRotation(
-                (float) ShootNBoot.getAngle(
+                (float) GameScreen.getAngle(
                         endX,
                         endY,
                         getX(),
