@@ -1,7 +1,6 @@
 package com.veerdonk.shootnboot.Screens;
 
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -19,6 +18,8 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -40,6 +41,9 @@ import java.util.Random;
 
 public class GameScreen implements Screen {
     final ShootNBoot game;
+    private Button machineButton;
+    private Button gunButton;
+    private Button submachineButton;
     private float delta = 0;
     private Player player;
     private CameraController cameraController;
@@ -77,10 +81,12 @@ public class GameScreen implements Screen {
     private int mapNodeHeight = 64;
     private int mapNodeWidth = 64;
     private MapNode [] [] mapNodes;
-
+    private int xpGained;
 
     private SpriteBatch batch;
     private Stage stage;
+
+    private boolean beenToShop = true;
 
     public GameScreen(final ShootNBoot game) {
         this.game = game;
@@ -101,7 +107,7 @@ public class GameScreen implements Screen {
             for(int j = 0; j < mapHeight/mapNodeHeight; j++){
                 mapNodes[i][j] = new MapNode(i*mapNodeWidth,j*mapNodeHeight,mapNodeWidth,mapNodeHeight, i, j);
             }}
-        TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("background"); //TODO check whether this is right
+        TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get("background");
 
         for(int x = 0; x < mapWidth/layer.getTileWidth(); x++){
             for(int y = 0; y < mapHeight/layer.getTileHeight(); y++){
@@ -145,7 +151,6 @@ public class GameScreen implements Screen {
                 150,
                 150
         );
-        //TODO make guns randomly appear (powerups?)
         firstGun = new Gun(textureAtlas.createSprite("weapon_gun"), textureAtlas.createSprite("survivor1_gun"), GunType.PISTOL, 200f, 100f);
         firstShotGun = new Gun(textureAtlas.createSprite("weapon_shotgun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
         getCurrentMapNode(firstGun.getX(), firstGun.getY()).gunsInTile.add(firstGun);
@@ -156,29 +161,28 @@ public class GameScreen implements Screen {
         stage.addActor(touchpadController.getTouchpad());
         stage.addActor(rotationTouchpadController.getTouchpad());
         Gdx.input.setInputProcessor(stage);
-
     }
 
     @Override
     public void show() {
-
+        this.render(Gdx.graphics.getDeltaTime());
     }
 
     @Override
     public void render(float delta) {
-        delta += Gdx.graphics.getDeltaTime();
         //Open GL stuff to set clear color and clear the screen
-        Gdx.gl.glClearColor(0, 0 ,0.2f, 1);
+        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         cameraController.getCamera().position.set(player.getX(), player.getY(), 0);
         cameraController.getCamera().update();
         tiledMapRenderer.setView(cameraController.getCamera());
         tiledMapRenderer.render();
         now = TimeUtils.millis();
+        xpGained = 0;
         ///////////////Player movement////////////////////
         //	Handles touchpads/rotation/movement/etc		//
 
-        if(touchpadController.getTouchpad().isTouched()) {
+        if (touchpadController.getTouchpad().isTouched()) {
             if (!rotationTouchpadController.getTouchpad().isTouched()) {
                 player.rotate(new Vector2(touchpadController.xPercent(), touchpadController.yPercent()));
             }
@@ -192,7 +196,7 @@ public class GameScreen implements Screen {
                         player.currentNode)
         );
 
-        if(rotationTouchpadController.getTouchpad().isTouched()) {
+        if (rotationTouchpadController.getTouchpad().isTouched()) {
             Vector2 rotVec = new Vector2(
                     rotationTouchpadController.xPercent(),
                     rotationTouchpadController.yPercent());
@@ -200,7 +204,7 @@ public class GameScreen implements Screen {
             //fires a bullet when the right touchpad is touched
 
             if (player.getWeapon() != null) {
-                if (now - lastShot > player.getWeapon().getFireRate()) {
+                if (now - lastShot > player.getWeapon().getFireRate()) {//TODO fix fire location to be the actual gun
                     if (player.getWeapon().getGunType() == GunType.SHOTGUN) {
                         //fire multiple bullets with spread
                         for (int i = 0; i < 6; i++) {
@@ -245,19 +249,19 @@ public class GameScreen implements Screen {
 
         batch.setProjectionMatrix(cameraController.getCamera().combined);
         batch.begin();
-        for(int i = 0; i < activeExplosions.size; i++){
+        for (int i = 0; i < activeExplosions.size; i++) {
             Explosion explosion = activeExplosions.get(i);
             explosion.update(Gdx.graphics.getDeltaTime());
             explosion.render(batch);
-            if(explosion.remove){
+            if (explosion.remove) {
                 activeExplosions.removeIndex(i);
             }
         }
-        for(int i = 0; i < activeGuns.size; i++){
-            if(!activeGuns.get(i).pickedUp) {
+        for (int i = 0; i < activeGuns.size; i++) {
+            if (!activeGuns.get(i).pickedUp) {
                 activeGuns.get(i).getGunSprite().draw(batch);
-            }else{
-                activeGuns.get(i).setPosition(0,0);
+            } else {
+                activeGuns.get(i).setPosition(0, 0);
                 activeGuns.removeIndex(i);
             }
         }
@@ -276,7 +280,7 @@ public class GameScreen implements Screen {
 
         ///////////////Bullets stuff//////////////////
 
-        for(int i = 0; i < activeBullets.size; i++){
+        for (int i = 0; i < activeBullets.size; i++) {
             boolean isRemoved = false;
             Bullet b = activeBullets.get(i);
             b.update(); // update bullet
@@ -284,18 +288,18 @@ public class GameScreen implements Screen {
             bSprite.setPosition(b.position.x, b.position.y);
             bSprite.draw(batch);
             Array<MapNode> collisionMapnodes = getCollisionMapNodes(b.direction, getCurrentMapNode(b.position.x, b.position.y));
-            for(MapNode node : collisionMapnodes){
-                for(Rectangle wallRect : node.wallsInTile)
-                    if(collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x, false) ||
-                            collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y, false)){
+            for (MapNode node : collisionMapnodes) {
+                for (Rectangle wallRect : node.wallsInTile)
+                    if (collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x, false) ||
+                            collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y, false)) {
                         bp.free(b);
                         activeBullets.removeIndex(i);
                         isRemoved = true;
                     }
-                for(Zombie zombie : node.zombiesInTile){
+                for (Zombie zombie : node.zombiesInTile) {
                     //Gdx.app.log("zombie in tile", zombie.getZombieRect().toString());
-                    if(collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false)||
-                            collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)){
+                    if (collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false) ||
+                            collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)) {
                         zombie.hurt(b.gun.getDamage());
                         node.removeZombieFromArray(zombie);
                         zombie.recoil(b.calculateDirection(b.gun.getKnockBack(), b.direction.angle()));
@@ -308,10 +312,9 @@ public class GameScreen implements Screen {
                     }
                 }
             }
-            if(outOfBounds(b.position.x, b.position.y) && !isRemoved){
+            if (outOfBounds(b.position.x, b.position.y) && !isRemoved) {
                 bp.free(b);
                 activeBullets.removeIndex(i);
-                isRemoved = true;
             }
 
         }
@@ -320,16 +323,16 @@ public class GameScreen implements Screen {
 
         ///////////////Zombie stuff////////////////////
         spawnZombie();
-        for(int i = 0; i < activeZombies.size; i++){
+        for (int i = 0; i < activeZombies.size; i++) {
             Zombie zombie = activeZombies.get(i);
             MapNode curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
 //			for(Zombie z : curMapNode.zombiesInTile){
 //				Gdx.app.log("in tile before", z.toString());
 //			}
             curMapNode.removeZombieFromArray(zombie);
-            zombie.move(player.getX(),player.getY());
+            zombie.move(player.getX(), player.getY());
 
-            if(zombie.getHealth() < 100){
+            if (zombie.getHealth() < 100) {
                 drawHealth(zombie.getX(),
                         zombie.getY() + 45,
                         43,
@@ -338,12 +341,12 @@ public class GameScreen implements Screen {
                         zombie.getHealth(),
                         zombie.getMaxHealth());
             }
-            if(zombie.getHealth() <= 0){
+            if (zombie.getHealth() <= 0) {
                 activeZombies.removeIndex(i);
                 activeExplosions.add(new Explosion(zombie.getX(), zombie.getY(), explosionTextures, 40, Color.GREEN));
                 zp.free(zombie);
-                player.getXp(zombie.getXpValue());
-            }else {
+                xpGained += zombie.getXpValue();
+            } else {
                 zombie.getZombieSprite().draw(batch);
                 curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
                 curMapNode.zombiesInTile.add(zombie);
@@ -356,9 +359,15 @@ public class GameScreen implements Screen {
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
 
-        if(player.getHealth() <= 0){
-            game.setScreen(new GameOverScreen(game));
-            dispose();
+        if(player.getXp(xpGained)){
+            if(player.getLevel() == 2){
+                game.setScreen(new ShopScreen(game, this));
+            }
+        }
+
+        if (player.getHealth() <= 0) {
+        game.setScreen(new GameOverScreen(game));
+        dispose();
         }
     }
 

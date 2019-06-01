@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
+import com.veerdonk.shootnboot.Screens.GameScreen;
 
 
 public class Player extends Character {
@@ -52,11 +53,14 @@ public class Player extends Character {
         this.playerSprite = weapon.getPlayerGunSprite();
     }
 
-    public void getXp(int gottenXp){
+    public boolean getXp(int gottenXp){
+        boolean leveledup = false;
         xp += gottenXp;
         if(xp > (level/levelConstant)*(level/levelConstant)){
             levelup();
+            leveledup = true;
         }
+        return leveledup;
     }
 
     public void levelup(){
@@ -98,6 +102,9 @@ public class Player extends Character {
         return playerRect;
     }
 
+    public int getLevel() {
+        return level;
+    }
 
     public void rotate(Vector2 vec) {
         playerSprite.setRotation(vec.angle());

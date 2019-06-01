@@ -2,19 +2,22 @@ package com.veerdonk.shootnboot.Screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.veerdonk.shootnboot.ShootNBoot;
 
-public class MainMenuScreen implements Screen {
+public class ShopScreen implements Screen {
 
     final ShootNBoot game;
+    private final Screen parent;
     OrthographicCamera camera;
 
-    public MainMenuScreen(final ShootNBoot game) {
+    public ShopScreen(final ShootNBoot game, Screen parent) {
+        this.parent = parent;
         this.game = game;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
+
     }
 
     @Override
@@ -24,19 +27,13 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        camera.update();
-        game.batch.setProjectionMatrix(camera.combined);
-
-        game.batch.begin();
-        game.font.draw(game.batch, "Welcome to ShootNBoot!!! ", 100, 150); //TODO make pretty
-        game.font.draw(game.batch, "Tap anywhere to begin!", 100, 100);
-        game.batch.end();
-        if(Gdx.input.isTouched()){
-            game.setScreen(new GameScreen(game));
-            dispose();
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        //TODO implement shop logic/view
+        returnToGame();
     }
 
     @Override
@@ -62,5 +59,10 @@ public class MainMenuScreen implements Screen {
     @Override
     public void dispose() {
 
+    }
+
+    public void returnToGame(){
+        game.setScreen(parent);
+        parent.render(Gdx.graphics.getDeltaTime());
     }
 }

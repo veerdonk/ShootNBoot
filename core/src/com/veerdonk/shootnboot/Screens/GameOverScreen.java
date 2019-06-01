@@ -30,10 +30,16 @@ public class GameOverScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-        game.font.draw(game.batch, "Game Over... ", 100, 150);
+        game.font.draw(game.batch, "Game Over... ", 100, 150); //TODO make pretty
+
         game.font.draw(game.batch, "Tap anywhere to try again", 100, 100);
         game.batch.end();
         if(Gdx.input.isTouched()){
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             game.setScreen(new GameScreen(game));
             dispose();
         }
