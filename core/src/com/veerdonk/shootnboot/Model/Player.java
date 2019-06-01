@@ -21,6 +21,8 @@ public class Player extends Character {
     private float levelConstant = 0.2f;
     private int xp = 0;
     private int level = 1;
+    //TODO give player money
+    //TODO give player attribute points to spend on health/damage/speed upgrades
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode) {
         this.playerSprite = playSprite;

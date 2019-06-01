@@ -1,7 +1,7 @@
 package com.veerdonk.shootnboot.Screens;
 
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -18,34 +18,33 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.veerdonk.shootnboot.Controllers.CameraController;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
-import com.veerdonk.shootnboot.Model.Explosion;
-import com.veerdonk.shootnboot.Model.Player;
 import com.veerdonk.shootnboot.Controllers.TouchpadController;
-import com.veerdonk.shootnboot.Model.Zombie;
 import com.veerdonk.shootnboot.Model.Bullet;
+import com.veerdonk.shootnboot.Model.Explosion;
 import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Model.GunType;
 import com.veerdonk.shootnboot.Model.MapNode;
+import com.veerdonk.shootnboot.Model.Player;
+import com.veerdonk.shootnboot.Model.Zombie;
 import com.veerdonk.shootnboot.Pools.BulletPool;
 import com.veerdonk.shootnboot.Pools.ZombiePool;
 import com.veerdonk.shootnboot.ShootNBoot;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class GameScreen implements Screen {
     final ShootNBoot game;
-    private Button machineButton;
-    private Button gunButton;
-    private Button submachineButton;
+    private Gun machine;
+    private Gun submachine;
     private float delta = 0;
-    private Player player;
+    public static Player player;
     private CameraController cameraController;
     private TouchpadController touchpadController;
     private TouchpadController rotationTouchpadController;
@@ -69,8 +68,9 @@ public class GameScreen implements Screen {
     private long lastShot = now;
 
     private TextureAtlas textureAtlas;
-    private Gun firstGun;
-    private Gun firstShotGun;
+    private Map<String, Gun> guns = new HashMap<String, Gun>();
+    private Gun pistol;
+    private Gun shotgun;
     private Array<Gun> activeGuns = new Array<Gun>();
 
     TiledMap tiledMap;
@@ -86,7 +86,6 @@ public class GameScreen implements Screen {
     private SpriteBatch batch;
     private Stage stage;
 
-    private boolean beenToShop = true;
 
     public GameScreen(final ShootNBoot game) {
         this.game = game;
@@ -151,12 +150,18 @@ public class GameScreen implements Screen {
                 150,
                 150
         );
-        firstGun = new Gun(textureAtlas.createSprite("weapon_gun"), textureAtlas.createSprite("survivor1_gun"), GunType.PISTOL, 200f, 100f);
-        firstShotGun = new Gun(textureAtlas.createSprite("weapon_shotgun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
-        getCurrentMapNode(firstGun.getX(), firstGun.getY()).gunsInTile.add(firstGun);
-        getCurrentMapNode(firstShotGun.getX(), firstShotGun.getY()).gunsInTile.add(firstShotGun);
-        activeGuns.add(firstGun);
-        activeGuns.add(firstShotGun);
+        pistol = new Gun(textureAtlas.createSprite("weapon_gun"), textureAtlas.createSprite("survivor1_gun"), GunType.PISTOL, 200f, 100f);
+        shotgun = new Gun(textureAtlas.createSprite("weapon_shotgun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
+        submachine = new Gun(textureAtlas.createSprite("weapon_machine"), textureAtlas.createSprite("survivor1_submachine"), GunType.SHOTGUN, 400f, 100f);
+        machine = new Gun(textureAtlas.createSprite("weapon_machine_gun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
+        getCurrentMapNode(pistol.getX(), pistol.getY()).gunsInTile.add(pistol);
+        getCurrentMapNode(shotgun.getX(), shotgun.getY()).gunsInTile.add(shotgun);
+        guns.put("pistol", pistol);
+        guns.put("shotgun", shotgun);
+        guns.put("submachine", submachine);
+        guns.put("machine", machine);
+        activeGuns.add(pistol);
+        activeGuns.add(shotgun);
         stage = new Stage(new FitViewport(800, 480, new CameraController(800, 480).getCamera()), batch);
         stage.addActor(touchpadController.getTouchpad());
         stage.addActor(rotationTouchpadController.getTouchpad());
@@ -354,21 +359,27 @@ public class GameScreen implements Screen {
         }
         ////////////////////////////////////////
 
+        game.font.getData().setScale(0.2f, 0.2f);
+        float camY = cameraController.getCamera().position.y;
+        float camX = cameraController.getCamera().position.x;
+        game.font.draw(batch, "Level: " + Integer.toString(player.getLevel()), camX-385, camY+220);
+        game.font.draw(batch, "Next shop at: " + Integer.toString(player.getLevel() + 5-player.getLevel()%5), camX-385, camY+240);
 
         batch.end();
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
 
         if(player.getXp(xpGained)){
-            if(player.getLevel() == 2){
-                game.setScreen(new ShopScreen(game, this));
+            if(player.getLevel()%2 == 0){
+                game.setScreen(new ShopScreen(game, this, player, guns));
+                //increase difficulty
             }
         }
-
         if (player.getHealth() <= 0) {
         game.setScreen(new GameOverScreen(game));
         dispose();
         }
+
     }
 
     public static double getAngle(float x1, float y1, float x2, float y2){
