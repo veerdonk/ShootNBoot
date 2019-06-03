@@ -82,11 +82,12 @@ public class GameScreen implements Screen {
     private int mapNodeWidth = 64;
     private MapNode [] [] mapNodes;
     private int xpGained;
+    private float difficultyMultiplier = 1.5f;
 
     private SpriteBatch batch;
     private Stage stage;
 
-
+    //TODO add sounds for everything
     public GameScreen(final ShootNBoot game) {
         this.game = game;
         textureAtlas = new TextureAtlas(Gdx.files.internal("Characters.atlas"));
@@ -152,8 +153,8 @@ public class GameScreen implements Screen {
         );
         pistol = new Gun(textureAtlas.createSprite("weapon_gun"), textureAtlas.createSprite("survivor1_gun"), GunType.PISTOL, 200f, 100f);
         shotgun = new Gun(textureAtlas.createSprite("weapon_shotgun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
-        submachine = new Gun(textureAtlas.createSprite("weapon_machine"), textureAtlas.createSprite("survivor1_submachine"), GunType.SHOTGUN, 400f, 100f);
-        machine = new Gun(textureAtlas.createSprite("weapon_machine_gun"), textureAtlas.createSprite("survivor1_shotgun"), GunType.SHOTGUN, 400f, 100f);
+        submachine = new Gun(textureAtlas.createSprite("weapon_machine"), textureAtlas.createSprite("survivor1_submachine"), GunType.SUBMACHINE, 400f, 100f);
+        machine = new Gun(textureAtlas.createSprite("weapon_machine_gun"), textureAtlas.createSprite("survivor1_machine_gun"), GunType.MACHINEGUN, 400f, 100f);
         getCurrentMapNode(pistol.getX(), pistol.getY()).gunsInTile.add(pistol);
         getCurrentMapNode(shotgun.getX(), shotgun.getY()).gunsInTile.add(shotgun);
         guns.put("pistol", pistol);
@@ -166,11 +167,13 @@ public class GameScreen implements Screen {
         stage.addActor(touchpadController.getTouchpad());
         stage.addActor(rotationTouchpadController.getTouchpad());
         Gdx.input.setInputProcessor(stage);
+
+        game.setScreen(new ShopScreen(game, this, player, guns));
     }
 
     @Override
     public void show() {
-        this.render(Gdx.graphics.getDeltaTime());
+        Gdx.input.setInputProcessor(stage);
     }
 
     @Override
@@ -374,10 +377,11 @@ public class GameScreen implements Screen {
                 game.setScreen(new ShopScreen(game, this, player, guns));
                 //increase difficulty
             }
+            increaseDifficulty();
         }
         if (player.getHealth() <= 0) {
-        game.setScreen(new GameOverScreen(game));
-        dispose();
+            game.setScreen(new GameOverScreen(game));
+            dispose();
         }
 
     }
@@ -467,12 +471,12 @@ public class GameScreen implements Screen {
         return x <= 0 || y <= 0 || x > 3170 || y > 3170;
     }
 
-    public void increaseDifficulty(int kills, long timePassed){
-//		if(kills % )
+    public void increaseDifficulty(){
         if(zombieSpawnRate > 100){
-            zombieSpawnRate -= 200;
+            zombieSpawnRate -= 300*difficultyMultiplier;
         }
-
+        zombieSpeed += 0.1 * difficultyMultiplier;
+        zombieDamage += (int) (zombieDamage/2)*(difficultyMultiplier/2);
     }
 
     @Override

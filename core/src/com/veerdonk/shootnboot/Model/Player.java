@@ -69,14 +69,13 @@ public class Player extends Character {
         level += 1;
         setMaxHealth(getMaxHealth() + 10);
         heal(10);
-        getWeapon().setDamage(getWeapon().getDamage() + 1);
         Gdx.app.log("Ding! level", Integer.toString(level));
     }
 
     public void heal(int amount){
-        setHealth(getHealth() + amount);
+        this.setHealth(this.getHealth() + amount);
         if(getHealth() > getMaxHealth()) {
-            setHealth(getMaxHealth());
+            this.setHealth(getMaxHealth());
         }
     }
 
