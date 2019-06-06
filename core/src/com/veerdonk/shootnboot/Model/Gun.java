@@ -14,8 +14,9 @@ public class Gun {
     private Rectangle gunRect;
     public boolean pickedUp = false;
     private float knockBack;
+    private String soundKey;
 
-    public Gun(Sprite gunSprite, Sprite playerGunSprite, GunType gunType, float x, float y) {
+    public Gun(Sprite gunSprite, Sprite playerGunSprite, GunType gunType, float x, float y, String soundKey) {
         this.playerGunSprite = playerGunSprite;
         this.gunSprite = gunSprite;
         this.gunType = gunType;
@@ -23,6 +24,7 @@ public class Gun {
         this.y = y;
         this.gunSprite.setPosition(x, y);
         this.gunRect = new Rectangle(x, y, 5, 5);
+        this.soundKey = soundKey;
 
         switch (gunType){
             case PISTOL:
@@ -119,6 +121,10 @@ public class Gun {
 
     public float getKnockBack() {
         return knockBack;
+    }
+
+    public String getSoundKey() {
+        return soundKey;
     }
 }
 

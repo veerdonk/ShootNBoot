@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
+import com.veerdonk.shootnboot.Controllers.SoundController;
 import com.veerdonk.shootnboot.Screens.GameScreen;
 
 
@@ -21,16 +22,18 @@ public class Player extends Character {
     private float levelConstant = 0.2f;
     private int xp = 0;
     private int level = 1;
-    //TODO give player money
-    //TODO give player attribute points to spend on health/damage/speed upgrades
+    private int money = 0;
+    private int attPoints = 0;
+    public SoundController sc;
 
-    public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode) {
+    public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode, SoundController sc) {
         this.playerSprite = playSprite;
         playerSprite.setPosition(initialX, initialY);
         this.playerSpeed = playerSpeed;
         this.playerRect = new Rectangle(initialX, initialY, width, height);
         this.cc = new CollisionController();
         this.currentNode = currentNode;
+        this.sc = sc;
     }
 
     public void setPosition(float x, float y){
@@ -67,9 +70,30 @@ public class Player extends Character {
 
     public void levelup(){
         level += 1;
-        setMaxHealth(getMaxHealth() + 10);
         heal(10);
+        attPoints += 1;
         Gdx.app.log("Ding! level", Integer.toString(level));
+    }
+
+    public boolean increaseAttHealth(){
+        if(attPoints > 0){
+            setMaxHealth(getMaxHealth() + getMaxHealth()/100*10);
+            heal(getMaxHealth()/100*10);
+            attPoints --;
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public boolean increaseAttSpeed(){
+        if(attPoints > 0){
+            playerSpeed += 0.5f;
+            attPoints --;
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public void heal(int amount){
@@ -111,4 +135,15 @@ public class Player extends Character {
         playerSprite.setRotation(vec.angle());
     }
 
+    public int getAttPoints() {
+        return attPoints;
+    }
+
+    public int getMoney() {
+        return money;
+    }
+
+    public void setMoney(int money) {
+        this.money = money;
+    }
 }

@@ -72,8 +72,8 @@ public class ShopScreen implements Screen {
         submachineButton = getButton(style, "Sub-machine gun: 80gp", 0,1);
         machineButton = getButton(style, "Machine gun: 120gp", 1,1);
         exitShop = getButton(style, "Exit Shop", 1,2);
-        increaseHealth = getButton(style, "Health ++: 50gp", 2,0);
-        increaseSpeed = getButton(style, "Speed ++: 50gp", 2,1);
+        increaseHealth = getButton(style, "Health ++: 1 Att", 2,0);
+        increaseSpeed = getButton(style, "Speed ++: 1 Att", 2,1);
         increaseDamage = getButton(style, "Damage ++: 50gp", 2, 2);
 
         stage.addActor(shotGunButton);
@@ -84,6 +84,7 @@ public class ShopScreen implements Screen {
         stage.addActor(increaseHealth);
         stage.addActor(increaseDamage);
         stage.addActor(increaseSpeed);
+        
         Gdx.input.setInputProcessor(stage);
 
         shotGunButton.addListener(new InputListener() {
@@ -143,8 +144,11 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.setMaxHealth(player.getMaxHealth() + 20);
-                player.heal(10);
+                if(player.increaseAttHealth()){
+                    player.sc.playDing();
+                }else{
+                    player.sc.playError();
+                }
             }
         });
         increaseSpeed.addListener(new InputListener() {
@@ -156,7 +160,11 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.setPlayerSpeed(player.getPlayerSpeed() + 0.5f);
+                if(player.increaseAttSpeed()){
+                    player.sc.playDing();
+                }else{
+                    player.sc.playError();
+                }
             }
         });
         increaseDamage.addListener(new InputListener() {
@@ -191,9 +199,12 @@ public class ShopScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
         tiledMapRenderer.setView(camera);
         tiledMapRenderer.render();
-        game.font.draw(game.batch, "Welcome to the shop", 100, 250);
         stage.act();
         stage.draw();
+        game.font.draw(game.batch, "Level: " + Integer.toString(player.getLevel()), 50, 75);
+        game.font.draw(game.batch, "Att points: " + Integer.toString(player.getAttPoints()),200, 75);
+        game.font.draw(game.batch, "gold: " + Integer.toString(player.getMoney()),400, 75);
+
         game.batch.end();
     }
 
