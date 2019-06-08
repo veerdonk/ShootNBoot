@@ -46,7 +46,7 @@ public class MainMenuScreen implements Screen {
 
         game.batch.begin();
         game.font.getData().setScale(0.5f, 0.2f);
-        game.font.draw(game.batch, "Welcome to Shooty!!! ", 200, 250);
+        game.font.draw(game.batch, "Welcome ", 200, 250);
         game.font.draw(game.batch, "Tap anywhere to begin!", 200, 200);
         game.batch.end();
         if(Gdx.input.isTouched()){

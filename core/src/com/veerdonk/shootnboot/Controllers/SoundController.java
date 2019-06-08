@@ -56,7 +56,6 @@ public class SoundController {
     public void hurtZombie(){
         Random rand = new Random();
         int i = rand.nextInt(3);
-        Gdx.app.log("i", Integer.toString(i));
         switch(i){
             case 0:
                 zombieHurt1.play();

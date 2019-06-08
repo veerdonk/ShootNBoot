@@ -1,6 +1,7 @@
 package com.veerdonk.shootnboot.Model;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
@@ -17,6 +18,8 @@ public class Zombie extends Character implements Pool.Poolable {
     private Rectangle zombieRect;
     private int damage;
     private int xpValue = 30;
+    private int gp = 10;
+    public boolean isBoss = false;
 
     public void sendZombie(Sprite zombieSprite, float zombieSpeed, float initialX, float initialY, int damage) {
         this.zombieSprite = zombieSprite;
@@ -25,6 +28,22 @@ public class Zombie extends Character implements Pool.Poolable {
         this.zombieRect = new Rectangle(initialX, initialY, width, height);
         this.damage = damage;
         this.setHitFreq(5);
+    }
+
+    public void sendBossZombie(Sprite zombieSprite, float zombieSpeed, float initialX, float initialY){
+        isBoss = true;
+        this.zombieSprite = new Sprite(zombieSprite);
+        this.zombieSprite.setSize(60, 60);
+        this.zombieSprite.setPosition(initialX, initialY);
+        this.zombieSpeed = zombieSpeed;
+        this.width = 60;
+        this.height = 60;
+        this.damage = 20;
+        this.xpValue = 300;
+        setHealth(1000);
+        setMaxHealth(1000);
+        this.zombieRect = new Rectangle(initialX, initialY, width, height);
+        this.setHitFreq(7);
     }
 
     public float getX(){
@@ -91,6 +110,14 @@ public class Zombie extends Character implements Pool.Poolable {
         this.zombieRect = null;
         this.zombieSprite = null;
         this.setHealth(100);
+        this.setMaxHealth(100);
+
+        if(isBoss){
+            this.width = 15f;
+            this.height = 15f;
+            this.xpValue = 30;
+            this.setHitFreq(5);
+        }
     }
 
     public void recoil(Vector2 hurtDir) {
@@ -104,5 +131,21 @@ public class Zombie extends Character implements Pool.Poolable {
         return "Zombie{" +
                 "zombieRect=" + zombieRect +
                 '}';
+    }
+
+    public int getGp() {
+        return gp;
+    }
+
+    public void setGp(int gp) {
+        this.gp = gp;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public void setHeight(float height) {
+        this.height = height;
     }
 }

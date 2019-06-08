@@ -44,8 +44,11 @@ public class ShopScreen implements Screen {
     private TextButton increaseSpeed;
     private TextButton increaseDamage;
     private TextButton exitShop;
-    private Table table;
-    boolean doneAtShop = false;
+
+    private int pistolCost = 50;
+    private int subCost = 80;
+    private int machineCost = 120;
+    private int shotgunCost = 150;
 
     public ShopScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
         this.parent = parent;
@@ -67,14 +70,14 @@ public class ShopScreen implements Screen {
         style.up = skin.getDrawable("blue_button_up");
         style.down = skin.getDrawable("blue_button_down");
         style.font = game.font;
-        shotGunButton = getButton(style, "Shotgun: 100gp", 0,0);
+        shotGunButton = getButton(style, "Shotgun: 150gp", 0,0);
         pistolButton = getButton(style, "Pistol: 50gp", 1,0);
         submachineButton = getButton(style, "Sub-machine gun: 80gp", 0,1);
         machineButton = getButton(style, "Machine gun: 120gp", 1,1);
         exitShop = getButton(style, "Exit Shop", 1,2);
         increaseHealth = getButton(style, "Health ++: 1 Att", 2,0);
         increaseSpeed = getButton(style, "Speed ++: 1 Att", 2,1);
-        increaseDamage = getButton(style, "Damage ++: 50gp", 2, 2);
+        increaseDamage = getButton(style, "Damage ++: 1 Att", 2, 2);
 
         stage.addActor(shotGunButton);
         stage.addActor(pistolButton);
@@ -96,7 +99,14 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.setWeapon(guns.get("shotgun"));
+                if(player.getMoney() >= shotgunCost){
+                    player.setWeapon(guns.get("shotgun"));
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - shotgunCost);
+                }else{
+                    player.sc.playError();
+                }
+
             }
         });
         submachineButton.addListener(new InputListener() {
@@ -108,7 +118,14 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.setWeapon(guns.get("submachine"));
+                if(player.getMoney() >= subCost){
+                    player.setWeapon(guns.get("submachine"));
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - subCost);
+                 }else{
+                    player.sc.playError();
+                 }
+
             }
         });
         machineButton.addListener(new InputListener() {
@@ -120,7 +137,14 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.setWeapon(guns.get("machine"));
+                if(player.getMoney() >= machineCost){
+                    player.setWeapon(guns.get("machine"));
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - machineCost);
+                }else{
+                    player.sc.playError();
+                }
+
             }
         });
         pistolButton.addListener(new InputListener() {
@@ -132,7 +156,14 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.setWeapon(guns.get("pistol"));
+                if(player.getMoney() >= pistolCost){
+                    player.setWeapon(guns.get("pistol"));
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - pistolCost);
+                }else{
+                    player.sc.playError();
+                }
+
             }
         });
         increaseHealth.addListener(new InputListener() {
@@ -176,7 +207,11 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                player.getWeapon().setDamage(player.getWeapon().getDamage() + 3); //TODO add damage multiplier to player
+                if(player.increaseAttDamage()){
+                    player.sc.playDing();
+                }else{
+                    player.sc.playError();
+                }
             }
         });
         exitShop.addListener(new EventListener() {
@@ -201,6 +236,8 @@ public class ShopScreen implements Screen {
         tiledMapRenderer.render();
         stage.act();
         stage.draw();
+        game.batch.end();
+        game.batch.begin();
         game.font.draw(game.batch, "Level: " + Integer.toString(player.getLevel()), 50, 75);
         game.font.draw(game.batch, "Att points: " + Integer.toString(player.getAttPoints()),200, 75);
         game.font.draw(game.batch, "gold: " + Integer.toString(player.getMoney()),400, 75);
@@ -267,6 +304,5 @@ public class ShopScreen implements Screen {
     public void returnToGame(){
         game.setScreen(parent);
         parent.show();
-//        parent.render(Gdx.graphics.getDeltaTime());
     }
 }

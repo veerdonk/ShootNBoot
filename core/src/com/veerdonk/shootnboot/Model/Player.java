@@ -25,6 +25,7 @@ public class Player extends Character {
     private int money = 0;
     private int attPoints = 0;
     public SoundController sc;
+    private int damage;
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode, SoundController sc) {
         this.playerSprite = playSprite;
@@ -56,6 +57,7 @@ public class Player extends Character {
     public void setWeapon(Gun weapon) {
         this.weapon = weapon;
         this.playerSprite = weapon.getPlayerGunSprite();
+        this.weapon.setDamage(this.weapon.getDamage() + damage);
     }
 
     public boolean getXp(int gottenXp){
@@ -90,6 +92,17 @@ public class Player extends Character {
         if(attPoints > 0){
             playerSpeed += 0.5f;
             attPoints --;
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public boolean increaseAttDamage(){
+        if(attPoints > 0){
+            damage += 3;
+            attPoints --;
+            this.weapon.setDamage(this.weapon.getDamage() + 3);
             return true;
         }else{
             return false;

@@ -60,15 +60,15 @@ public class CollisionController {
     public boolean checkX(Rectangle movingRect, Sprite sprite, Rectangle rectToCheck, MapNode node, float endx, float percentX, boolean move){
         float newx = endx;
         boolean collided = false;
-        if(rectToCheck.x + 32 > endx && percentX < 0 && node.getxNode() <= 49 && node.getyNode() >= 1 && node.getyNode() < 49){
+        if(rectToCheck.x + rectToCheck.width > endx && percentX < 0 && node.getxNode() <= 49 && node.getyNode() >= 1 && node.getyNode() < 49){
             //Gdx.app.log("wall hit: ", rectToCheck.toString());
-            newx = rectToCheck.x + 33;
+            newx = rectToCheck.x + rectToCheck.width + 1;
             collided = true;
         }
-        if(rectToCheck.x < endx + 32 && percentX > 0 &&  node.getxNode() > 0 && node.getyNode() >= 1 && node.getyNode() < 49){
+        if(rectToCheck.x < endx + rectToCheck.width && percentX > 0 &&  node.getxNode() > 0 && node.getyNode() >= 1 && node.getyNode() < 49){
 //            Gdx.app.log("percentX", Float.toString(percentX));
 //            Gdx.app.log("endx", Float.toString(endx + 32));
-            newx = rectToCheck.x - 35;
+            newx = rectToCheck.x - rectToCheck.width - 1;
             collided = true;
         }
         if(collided) {
@@ -83,12 +83,12 @@ public class CollisionController {
     public boolean checkY(Rectangle movingRect, Sprite sprite, Rectangle rectToCheck, MapNode node, float endy, float percentY, boolean move){
         float newy = endy;
         boolean collided = false;
-        if(rectToCheck.y + 32 > endy && percentY < 0 && node.getyNode() <= 49 && node.getxNode() >= 1 && node.getxNode() < 49){
-            newy = rectToCheck.y + 33;
+        if(rectToCheck.y + rectToCheck.height > endy && percentY < 0 && node.getyNode() <= 49 && node.getxNode() >= 1 && node.getxNode() < 49){
+            newy = rectToCheck.y + rectToCheck.height + 1;
             collided = true;
         }
-        if(rectToCheck.y < endy + 32 && percentY > 0 && node.getyNode() > 0 && node.getxNode() >= 1 && node.getxNode() < 49){
-            newy = rectToCheck.y - 33;
+        if(rectToCheck.y < endy + rectToCheck.height && percentY > 0 && node.getyNode() > 0 && node.getxNode() >= 1 && node.getxNode() < 49){
+            newy = rectToCheck.y - rectToCheck.height - 1;
             collided = true;
         }
         if(collided) {
