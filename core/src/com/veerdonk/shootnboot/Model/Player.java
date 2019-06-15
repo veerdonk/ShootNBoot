@@ -5,9 +5,12 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
 import com.veerdonk.shootnboot.Controllers.SoundController;
 import com.veerdonk.shootnboot.Screens.GameScreen;
+
+import java.sql.Time;
 
 
 public class Player extends Character {
@@ -26,6 +29,20 @@ public class Player extends Character {
     private int attPoints = 0;
     public SoundController sc;
     private int damage;
+    private int powerUpDuration;
+    private boolean regenActive = false;
+    private boolean quadActive = false;
+    private boolean rapidActive =false;
+    private boolean speedActive =false;
+    private long regenActivated;
+    private long quadActivated;
+    private long rapidActivated;
+    private long speedActivated;
+    private long lastRegen = TimeUtils.millis();
+    private float oldSpeed;
+    private int oldDamage;
+    private float oldFireRate;
+
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode, SoundController sc) {
         this.playerSprite = playSprite;
@@ -47,7 +64,28 @@ public class Player extends Character {
         float endy = getY() + percentY * playerSpeed;
 
         cc.checkCharacter(playerRect, playerSprite, percentX, percentY, collisionMapnodes, endx, endy);
-
+        if(regenActive && TimeUtils.millis() - lastRegen > 1000){
+            heal(20);
+            lastRegen = TimeUtils.millis();
+            if(TimeUtils.millis() - regenActivated > powerUpDuration){
+                regenActive = false;
+            }
+        }
+        if(quadActive) {
+            if (TimeUtils.millis() - quadActivated > powerUpDuration) {
+                this.weapon.setDamage(oldDamage);
+            }
+        }
+        if(speedActive){
+            if(TimeUtils.millis() - speedActivated > powerUpDuration){
+                playerSpeed = oldSpeed;
+            }
+        }
+        if(rapidActive){
+            if(TimeUtils.millis() - rapidActivated > powerUpDuration){
+                this.weapon.setFireRate(oldFireRate);
+            }
+        }
     }
 
     public Gun getWeapon() {
@@ -113,6 +151,28 @@ public class Player extends Character {
         this.setHealth(this.getHealth() + amount);
         if(getHealth() > getMaxHealth()) {
             this.setHealth(getMaxHealth());
+        }
+    }
+
+    public void getPowerUp(PowerUPType type){
+        if(type == PowerUPType.QUAD){
+            quadActive = true;
+            oldDamage = this.weapon.getDamage();
+            this.weapon.setDamage(this.weapon.getDamage()*4);
+            quadActivated = TimeUtils.millis();
+        }else if(type == PowerUPType.RAPIDFIRE){
+            rapidActive = true;
+            oldFireRate = this.weapon.getFireRate();
+            this.weapon.setFireRate(this.weapon.getFireRate()/2);
+            rapidActivated = TimeUtils.millis();
+        }else if(type == PowerUPType.SPEED){
+            speedActive = true;
+            oldSpeed = playerSpeed;
+            this.setPlayerSpeed((float) (playerSpeed*1.25));
+            speedActivated = TimeUtils.millis();
+        }else if(type == PowerUPType.REGEN){
+            regenActive = true;
+            regenActivated = TimeUtils.millis();
         }
     }
 

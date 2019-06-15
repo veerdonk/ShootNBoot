@@ -34,13 +34,17 @@ import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Model.GunType;
 import com.veerdonk.shootnboot.Model.MapNode;
 import com.veerdonk.shootnboot.Model.Player;
+import com.veerdonk.shootnboot.Model.PowerUPType;
+import com.veerdonk.shootnboot.Model.PowerUp;
 import com.veerdonk.shootnboot.Model.Zombie;
 import com.veerdonk.shootnboot.Pools.BulletPool;
 import com.veerdonk.shootnboot.Pools.ZombiePool;
 import com.veerdonk.shootnboot.ShootNBoot;
 
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 
 public class GameScreen implements Screen {
@@ -97,6 +101,9 @@ public class GameScreen implements Screen {
 
     private boolean movementVisible = false;
     private boolean rotationVisible = false;
+    private long lastPowerUp = TimeUtils.millis();
+    private Array<PowerUp> powerUps;
+    private Map<String, Sprite> powerUpSprites;
 
     //TODO add sounds for everything
     public GameScreen(final ShootNBoot game) {
@@ -135,6 +142,9 @@ public class GameScreen implements Screen {
         lastZombie = now;
         zombieDamage = 5;
         zombieSprite = textureAtlas.createSprite("zoimbie1_hold");
+
+        //TODO add actual powerup sprites
+        powerUpSprites.put("QUAD", textureAtlas.createSprite("quad"));
 
         batch = new SpriteBatch();
         cameraController = new CameraController(800, 480);
@@ -204,32 +214,6 @@ public class GameScreen implements Screen {
         fakeTouchEvent.setStageX(vec.x);
         fakeTouchEvent.setStageY(vec.y);
         touchpad.fire(fakeTouchEvent);
-
-//        if(Gdx.input.justTouched()){
-//            Gdx.app.log("TouchX", Integer.toString(Gdx.input.getX()));
-//            Vector2 stagePos = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-//            InputEvent fakeTouchEvent = new InputEvent();
-//            fakeTouchEvent.setType(InputEvent.Type.touchDown);
-//            fakeTouchEvent.setStageX(stagePos.x);
-//            fakeTouchEvent.setStageY(stagePos.y);
-//            if(stagePos.x < 400 && !touchpadController.getTouchpad().isTouched()){
-//                touchpadController.getTouchpad().setPosition(stagePos.x - 75, stagePos.y - 75);
-//                touchpadController.getTouchpad().fire(fakeTouchEvent);
-//            }
-//
-//        }
-//        if(Gdx.input.justTouched()) {
-//            Gdx.app.log("TouchX", Integer.toString(Gdx.input.getX()));
-//            Vector2 stagePos = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-//            InputEvent fakeTouchEvent = new InputEvent();
-//            fakeTouchEvent.setType(InputEvent.Type.touchDown);
-//            fakeTouchEvent.setStageX(stagePos.x);
-//            fakeTouchEvent.setStageY(stagePos.y);
-//            if(stagePos.x > 400 && !rotationTouchpadController.getTouchpad().isTouched()){
-//                rotationTouchpadController.getTouchpad().setPosition(stagePos.x - 75, stagePos.y -75);
-//                rotationTouchpadController.getTouchpad().fire(fakeTouchEvent);
-//            }
-//        }
     }
 
 
@@ -256,12 +240,13 @@ public class GameScreen implements Screen {
             if (!rotationTouchpadController.getTouchpad().isTouched()) {
                 player.rotate(new Vector2(touchpadController.xPercent(), touchpadController.yPercent()));
             }
-        }else if (Gdx.input.isTouched()){
-            Vector2 stageVec = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            if(stageVec.x < 400) {
-                moveTouchPad(touchpadController.getTouchpad(), stageVec);
-            }
         }
+//        else if (Gdx.input.isTouched()){
+//            Vector2 stageVec = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+//            if(stageVec.x < 400) {
+//                moveTouchPad(touchpadController.getTouchpad(), stageVec);
+//            }
+//        }
         int healthLost = player.getHealth();
         player.move(
                 touchpadController.xPercent(),
@@ -318,12 +303,13 @@ public class GameScreen implements Screen {
                     }
                 }
             }
-        }else if (Gdx.input.isTouched()){
-            Vector2 stageVec = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-            if(stageVec.x > 400) {
-                moveTouchPad(rotationTouchpadController.getTouchpad(), stageVec);
-            }
         }
+//        else if (Gdx.input.isTouched()){
+//            Vector2 stageVec = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+//            if(stageVec.x > 400) {
+//                moveTouchPad(rotationTouchpadController.getTouchpad(), stageVec);
+//            }
+//        }
         //Gdx.app.log("player mapnode", player.currentNode.toString());
         player.currentNode.playerInTile.removeIndex(0);//remove from old node
         player.currentNode = getCurrentMapNode(player.getX(), player.getY());//update node
@@ -444,6 +430,16 @@ public class GameScreen implements Screen {
                 zombie.getZombieSprite().draw(batch);
                 curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
                 curMapNode.zombiesInTile.add(zombie);
+            }
+        }
+
+        for(int i = 0; i < powerUps.size; i++){
+            PowerUp powerUp = powerUps.get(i);
+            if(powerUp.getPowerUpRect().overlaps(player.getPlayerRect())){
+                player.getPowerUp(powerUp.getType());
+                powerUps.removeIndex(i);
+            }else{
+                powerUp.getPowerUpSprite().draw(batch);
             }
         }
         ////////////////////////////////////////
@@ -579,6 +575,25 @@ public class GameScreen implements Screen {
         }
         zombieSpeed += 0.1 * difficultyMultiplier;
         zombieDamage += (int) (zombieDamage/2)*(difficultyMultiplier/2); 
+    }
+
+    public void spawnPowerUp(){
+        if(now - lastPowerUp > 20000){
+            Random random = new Random();
+            float randX = 50 + random.nextInt( 3150 - 50);
+            float randY = 50 + random.nextInt( 3150 - 50);
+            PowerUPType type = randomEnum(PowerUPType.class);
+            Sprite powerUpSprite = powerUpSprites.get(type.toString());
+            PowerUp powerUp = new PowerUp(powerUpSprite, new Rectangle(randX, randY, 15,15), type);
+            powerUps.add(powerUp);
+            lastPowerUp = now;
+        }
+    }
+
+    public static <T extends Enum<?>> T randomEnum(Class<T> clazz){
+        Random random = new Random();
+        int x = random.nextInt(clazz.getEnumConstants().length);
+        return clazz.getEnumConstants()[x];
     }
 
     @Override

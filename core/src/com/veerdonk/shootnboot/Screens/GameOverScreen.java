@@ -9,6 +9,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.veerdonk.shootnboot.ShootNBoot;
 
 public class GameOverScreen implements Screen {
@@ -18,6 +19,7 @@ public class GameOverScreen implements Screen {
     TiledMap tiledMap;
     TiledMapRenderer tiledMapRenderer;
     MapProperties mapProperties;
+    private long restartTimer = TimeUtils.millis();
 
     public GameOverScreen(final ShootNBoot game) {
         this.game = game;
@@ -47,7 +49,7 @@ public class GameOverScreen implements Screen {
         game.font.draw(game.batch, "Tap anywhere to try again", 200, 200);
         game.batch.end();
 
-        if(Gdx.input.isTouched()){
+        if(Gdx.input.isTouched() && TimeUtils.millis() - restartTimer > 5000){
             game.setScreen(new GameScreen(game));
             dispose();
         }
