@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Model.MapNode;
+import com.veerdonk.shootnboot.Model.PowerUp;
 import com.veerdonk.shootnboot.Model.Zombie;
 
 public class CollisionController {
@@ -28,6 +29,16 @@ public class CollisionController {
                 if(node.playerInTile.size != 0) {
                     if (hitByZombieX || hitByZombieY) {
                         node.playerInTile.get(0).hurt(zombie.getDamage());
+                    }
+                }
+            }
+            for(PowerUp powerUp : node.powerUpsInTile){
+                if(
+                checkX(rect, sprite, powerUp.getPowerUpRect(), node, endx, percentX, false) ||
+                checkY(rect, sprite, powerUp.getPowerUpRect(), node, endy, percentY, false)
+                ){
+                    if(node.playerInTile.size != 0) {
+                        powerUp.isCollected = true;
                     }
                 }
             }

@@ -29,11 +29,11 @@ public class Player extends Character {
     private int attPoints = 0;
     public SoundController sc;
     private int damage;
-    private int powerUpDuration;
+    private int powerUpDuration = 10000;
     private boolean regenActive = false;
     private boolean quadActive = false;
-    private boolean rapidActive =false;
-    private boolean speedActive =false;
+    private boolean rapidActive = false;
+    private boolean speedActive = false;
     private long regenActivated;
     private long quadActivated;
     private long rapidActivated;
@@ -52,6 +52,7 @@ public class Player extends Character {
         this.cc = new CollisionController();
         this.currentNode = currentNode;
         this.sc = sc;
+        this.oldSpeed = playerSpeed;
     }
 
     public void setPosition(float x, float y){
@@ -64,26 +65,35 @@ public class Player extends Character {
         float endy = getY() + percentY * playerSpeed;
 
         cc.checkCharacter(playerRect, playerSprite, percentX, percentY, collisionMapnodes, endx, endy);
+
+
         if(regenActive && TimeUtils.millis() - lastRegen > 1000){
             heal(20);
             lastRegen = TimeUtils.millis();
             if(TimeUtils.millis() - regenActivated > powerUpDuration){
                 regenActive = false;
+                Gdx.app.log("powerup", "regen stopped");
             }
         }
         if(quadActive) {
             if (TimeUtils.millis() - quadActivated > powerUpDuration) {
                 this.weapon.setDamage(oldDamage);
+                quadActive = false;
+                Gdx.app.log("powerup", "quad stopped");
             }
         }
         if(speedActive){
             if(TimeUtils.millis() - speedActivated > powerUpDuration){
                 playerSpeed = oldSpeed;
+                speedActive = false;
+                Gdx.app.log("powerup", "speed stopped");
             }
         }
         if(rapidActive){
             if(TimeUtils.millis() - rapidActivated > powerUpDuration){
                 this.weapon.setFireRate(oldFireRate);
+                rapidActive = false;
+                Gdx.app.log("powerup", "rapid stopped");
             }
         }
     }
@@ -96,6 +106,8 @@ public class Player extends Character {
         this.weapon = weapon;
         this.playerSprite = weapon.getPlayerGunSprite();
         this.weapon.setDamage(this.weapon.getDamage() + damage);
+        this.oldDamage = weapon.getDamage();
+        this.oldFireRate = weapon.getFireRate();
     }
 
     public boolean getXp(int gottenXp){
@@ -130,6 +142,7 @@ public class Player extends Character {
         if(attPoints > 0){
             playerSpeed += 0.5f;
             attPoints --;
+            oldSpeed = playerSpeed;
             return true;
         }else{
             return false;
@@ -141,6 +154,7 @@ public class Player extends Character {
             damage += 3;
             attPoints --;
             this.weapon.setDamage(this.weapon.getDamage() + 3);
+            oldDamage = this.weapon.getDamage();
             return true;
         }else{
             return false;
@@ -156,23 +170,32 @@ public class Player extends Character {
 
     public void getPowerUp(PowerUPType type){
         if(type == PowerUPType.QUAD){
-            quadActive = true;
-            oldDamage = this.weapon.getDamage();
-            this.weapon.setDamage(this.weapon.getDamage()*4);
-            quadActivated = TimeUtils.millis();
+            if(weapon != null) {
+                quadActive = true;
+//                oldDamage = this.weapon.getDamage();
+                this.weapon.setDamage(this.weapon.getDamage() * 4);
+                quadActivated = TimeUtils.millis();
+                Gdx.app.log("powerup", "quad");
+            }
         }else if(type == PowerUPType.RAPIDFIRE){
-            rapidActive = true;
-            oldFireRate = this.weapon.getFireRate();
-            this.weapon.setFireRate(this.weapon.getFireRate()/2);
-            rapidActivated = TimeUtils.millis();
+            if(weapon != null) {
+                rapidActive = true;
+//            oldFireRate = this.weapon.getFireRate();
+                this.weapon.setFireRate(this.weapon.getFireRate() / 2);
+                rapidActivated = TimeUtils.millis();
+                Gdx.app.log("powerup", "rapid fire");
+            }
         }else if(type == PowerUPType.SPEED){
             speedActive = true;
-            oldSpeed = playerSpeed;
-            this.setPlayerSpeed((float) (playerSpeed*1.25));
+//            oldSpeed = playerSpeed;
+            this.setPlayerSpeed((float) (playerSpeed*1.5));
             speedActivated = TimeUtils.millis();
+            Gdx.app.log("powerup", "speed");
+
         }else if(type == PowerUPType.REGEN){
             regenActive = true;
             regenActivated = TimeUtils.millis();
+            Gdx.app.log("powerup", "regen");
         }
     }
 

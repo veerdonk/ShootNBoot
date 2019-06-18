@@ -23,6 +23,7 @@ public class SoundController {
     private Sound playerLevel = Gdx.audio.newSound(Gdx.files.internal("sound/chipquest.mp3"));
     private Sound ding = Gdx.audio.newSound(Gdx.files.internal("sound/ding.mp3"));
     private Sound error = Gdx.audio.newSound(Gdx.files.internal("sound/error.mp3"));
+    private Sound powerUpPickup = Gdx.audio.newSound(Gdx.files.internal("sound/powerup_pickup.wav"));
     private long lastPlayerHurt = TimeUtils.millis();
 
 
@@ -105,6 +106,8 @@ public class SoundController {
         error.play();
     }
 
+    public void  playPowerUpPickup(){powerUpPickup.play();}
+
     public void dispose(){
         pistol.dispose();
         machine.dispose();
@@ -121,6 +124,7 @@ public class SoundController {
         playerLevel.dispose();
         ding.dispose();
         error.dispose();
+        powerUpPickup.dispose();
     }
 
 }

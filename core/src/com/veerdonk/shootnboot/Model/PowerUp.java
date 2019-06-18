@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class PowerUp {
 
+    public boolean isCollected;
     private Sprite powerUpSprite;
     private Rectangle powerUpRect;
     private PowerUPType type;

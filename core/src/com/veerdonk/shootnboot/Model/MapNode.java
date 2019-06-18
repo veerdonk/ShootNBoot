@@ -15,6 +15,7 @@ public class MapNode {
     public Array<Player> playerInTile;
     public Array<Rectangle> wallsInTile;
     public Array<Gun> gunsInTile;
+    public Array<PowerUp> powerUpsInTile;
 
     public MapNode(float x, float y, float width, float height, int xNode, int yNode) {
         this.x = x;
@@ -28,12 +29,21 @@ public class MapNode {
         this.wallsInTile = new Array<Rectangle>();
         this.playerInTile = new Array<Player>();
         this.gunsInTile = new Array<Gun>();
+        this.powerUpsInTile = new Array<PowerUp>();
     }
 
     public void removeZombieFromArray(Zombie zombie){
         for(int i = 0; i < zombiesInTile.size; i++){
             if(zombie == zombiesInTile.get(i)){
                 zombiesInTile.removeIndex(i);
+            }
+        }
+    }
+
+    public void removePowerUpFromArray(PowerUp powerUp){
+        for(int i = 0; i < powerUpsInTile.size; i++){
+            if(powerUp == powerUpsInTile.get(i)){
+                powerUpsInTile.removeIndex(i);
             }
         }
     }

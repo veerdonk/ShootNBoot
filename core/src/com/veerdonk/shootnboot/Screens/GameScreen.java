@@ -143,8 +143,12 @@ public class GameScreen implements Screen {
         zombieDamage = 5;
         zombieSprite = textureAtlas.createSprite("zoimbie1_hold");
 
-        //TODO add actual powerup sprites
-        powerUpSprites.put("QUAD", textureAtlas.createSprite("quad"));
+        powerUpSprites = new HashMap<>();
+        powerUpSprites.put("QUAD", textureAtlas.createSprite("powerUpQuad"));
+        powerUpSprites.put("RAPIDFIRE", textureAtlas.createSprite("powerUpRapid"));
+        powerUpSprites.put("SPEED", textureAtlas.createSprite("powerUpSpeed"));
+        powerUpSprites.put("REGEN", textureAtlas.createSprite("powerUpRegen"));
+        powerUps = new Array<>();
 
         batch = new SpriteBatch();
         cameraController = new CameraController(800, 480);
@@ -432,12 +436,15 @@ public class GameScreen implements Screen {
                 curMapNode.zombiesInTile.add(zombie);
             }
         }
-
+        spawnPowerUp();
         for(int i = 0; i < powerUps.size; i++){
             PowerUp powerUp = powerUps.get(i);
-            if(powerUp.getPowerUpRect().overlaps(player.getPlayerRect())){
+            if(powerUp.isCollected){
+                sc.playPowerUpPickup();
                 player.getPowerUp(powerUp.getType());
                 powerUps.removeIndex(i);
+                powerUp.getPowerUpSprite().setPosition(0,0);
+                getCurrentMapNode(powerUp.getPowerUpRect().getX(), powerUp.getPowerUpRect().getX()).removePowerUpFromArray(powerUp);
             }else{
                 powerUp.getPowerUpSprite().draw(batch);
             }
@@ -574,17 +581,20 @@ public class GameScreen implements Screen {
             }
         }
         zombieSpeed += 0.1 * difficultyMultiplier;
-        zombieDamage += (int) (zombieDamage/2)*(difficultyMultiplier/2); 
+        //zombieDamage += (int) (zombieDamage/2)*(difficultyMultiplier/2);
     }
 
     public void spawnPowerUp(){
-        if(now - lastPowerUp > 20000){
+        if(now - lastPowerUp > 10000){
             Random random = new Random();
             float randX = 50 + random.nextInt( 3150 - 50);
             float randY = 50 + random.nextInt( 3150 - 50);
             PowerUPType type = randomEnum(PowerUPType.class);
             Sprite powerUpSprite = powerUpSprites.get(type.toString());
-            PowerUp powerUp = new PowerUp(powerUpSprite, new Rectangle(randX, randY, 15,15), type);
+            PowerUp powerUp = new PowerUp(powerUpSprite, new Rectangle(randX, randY, 30,30), type);
+            powerUpSprite.setSize(30,30);
+            powerUpSprite.setPosition(randX, randY);
+            getCurrentMapNode(randX, randY).powerUpsInTile.add(powerUp);
             powerUps.add(powerUp);
             lastPowerUp = now;
         }
