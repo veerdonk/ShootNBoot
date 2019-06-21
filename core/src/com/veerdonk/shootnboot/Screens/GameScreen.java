@@ -175,7 +175,7 @@ public class GameScreen implements Screen {
                 new Texture(Gdx.files.internal("touchBack.png")),
                 new Texture(Gdx.files.internal("touchKnob.png")),
                 15,
-                15,
+                35,
                 150,
                 150
         );
@@ -183,7 +183,7 @@ public class GameScreen implements Screen {
                 new Texture(Gdx.files.internal("touchBack.png")),
                 new Texture(Gdx.files.internal("touchKnob.png")),
                 (int) cameraController.getCamera().viewportWidth - 150 - 15,
-                15,
+                35,
                 150,
                 150
         );
