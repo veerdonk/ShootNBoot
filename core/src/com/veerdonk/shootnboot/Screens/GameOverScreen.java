@@ -49,7 +49,7 @@ public class GameOverScreen implements Screen {
         game.font.draw(game.batch, "Tap anywhere to try again", 200, 200);
         game.batch.end();
 
-        if(Gdx.input.isTouched() && TimeUtils.millis() - restartTimer > 5000){
+        if(Gdx.input.isTouched() && TimeUtils.millis() - restartTimer > 1000){
             game.setScreen(new GameScreen(game));
             dispose();
         }

@@ -242,4 +242,20 @@ public class Player extends Character {
     public void setMoney(int money) {
         this.money = money;
     }
+
+    public boolean isRegenActive() {
+        return regenActive;
+    }
+
+    public boolean isQuadActive() {
+        return quadActive;
+    }
+
+    public boolean isRapidActive() {
+        return rapidActive;
+    }
+
+    public boolean isSpeedActive() {
+        return speedActive;
+    }
 }

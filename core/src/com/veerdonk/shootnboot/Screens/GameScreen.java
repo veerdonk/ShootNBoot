@@ -20,6 +20,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -105,7 +109,12 @@ public class GameScreen implements Screen {
     private Array<PowerUp> powerUps;
     private Map<String, Sprite> powerUpSprites;
 
-    //TODO add sounds for everything
+    private Button bombButton;
+    private Random random = new Random();
+    private String swarmMessage = "A large group of zombies has spawned...";
+    private long textDisplayedSince;
+    private boolean swarmSpawned;
+
     public GameScreen(final ShootNBoot game) {
         this.game = game;
         sc = new SoundController();
@@ -196,9 +205,13 @@ public class GameScreen implements Screen {
 //        touchpadController.getTouchpad().setVisible(false);
 
         Gdx.input.setInputProcessor(stage);
-
-
-
+        TextureAtlas buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button_blue.atlas"));
+        Skin skin = new Skin();
+        skin.addRegions(buttonAtlas);
+        Button.ButtonStyle style = new Button.ButtonStyle();
+        style.up = skin.getDrawable("blue_button_up");
+        style.down = skin.getDrawable("blue_button_down");
+        bombButton = new Button();
         game.setScreen(new ShopScreen(game, this, player, guns));
     }
 
@@ -402,9 +415,6 @@ public class GameScreen implements Screen {
         for (int i = 0; i < activeZombies.size; i++) {
             Zombie zombie = activeZombies.get(i);
             MapNode curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
-//			for(Zombie z : curMapNode.zombiesInTile){
-//				Gdx.app.log("in tile before", z.toString());
-//			}
             curMapNode.removeZombieFromArray(zombie);
             zombie.move(player.getX(), player.getY());
 
@@ -415,7 +425,7 @@ public class GameScreen implements Screen {
                 healthWidth = 63;
             }
 
-            if (zombie.getHealth() < zombie.getMaxHealth()) {
+            if (zombie.getHealth() < zombie.getMaxHealth() && zombie.getHealth() > 0) {
                 drawHealth(zombie.getX(),
                         healthY,
                         healthWidth,
@@ -449,6 +459,9 @@ public class GameScreen implements Screen {
                 powerUp.getPowerUpSprite().draw(batch);
             }
         }
+
+
+
         ////////////////////////////////////////
 
         game.font.getData().setScale(0.2f, 0.2f);
@@ -458,6 +471,32 @@ public class GameScreen implements Screen {
         game.font.draw(batch, "Att points: " + Integer.toString(player.getAttPoints()),camX-385, camY+200);
         game.font.draw(batch, "gold: " + Integer.toString(player.getMoney()),camX-385, camY+220);
         game.font.draw(batch, "Next shop at: " + Integer.toString(player.getLevel() + 2-player.getLevel()%2), camX-385, camY+240);
+
+        if(now - textDisplayedSince < 5000){
+            game.font.setColor(Color.RED);
+            game.font.draw(batch, swarmMessage, camX-100, camY+210);
+            game.font.setColor(Color.WHITE);
+        }
+        if(player.isRegenActive()){
+            game.font.setColor(Color.GREEN);
+            game.font.draw(batch, "Regen active", camX - 385, camY+150);
+            game.font.setColor(Color.WHITE);
+        }
+        if(player.isQuadActive()){
+            game.font.setColor(Color.PURPLE);
+            game.font.draw(batch, "Quad active", camX - 385, camY+130);
+            game.font.setColor(Color.WHITE);
+        }
+        if(player.isRapidActive()){
+            game.font.setColor(Color.BLUE);
+            game.font.draw(batch, "Rapid fire active", camX - 385, camY+110);
+            game.font.setColor(Color.WHITE);
+        }
+        if(player.isSpeedActive()){
+            game.font.setColor(Color.YELLOW);
+            game.font.draw(batch, "Speed active", camX-385, camY+90);
+            game.font.setColor(Color.WHITE);
+        }
 
         batch.end();
         stage.act(Gdx.graphics.getDeltaTime());
@@ -534,7 +573,6 @@ public class GameScreen implements Screen {
     public void spawnZombie(){
         if(now - lastZombie > zombieSpawnRate){
             lastZombie = now;
-            Random random = new Random();
             float zombieX = 50 + random.nextInt( 3150 - 50);
             float zombieY = 50 + random.nextInt(3150 - 50);
             Zombie zombie = zp.obtain();
@@ -546,8 +584,33 @@ public class GameScreen implements Screen {
             }
             activeZombies.add(zombie);
             sc.zombieAttack();
+
+            if(random.nextInt(43 - (int)(2*difficultyMultiplier)) == 1){
+                spawnSwarm((int) (difficultyMultiplier*2.5 * 3));
+            }
+
         }
 
+    }
+
+    public void spawnSwarm(int numZombies){
+        float swarmCenterX = 50 + random.nextInt(3150 - 50*numZombies);
+        float swarmCenterY = 50 + random.nextInt(3150 - 50*numZombies);
+
+        for(int i = 0; i < numZombies; i++){
+            Zombie zombie = zp.obtain();
+            float zombieOffsetX = random.nextInt(32*numZombies);
+            float zombieOffsetY = random.nextInt(32*numZombies);
+            zombie.sendZombie(
+                    zombieSprite,
+                    zombieSpeed,
+                    swarmCenterX + zombieOffsetX,
+                    swarmCenterY + zombieOffsetY,
+                    zombieDamage);
+            activeZombies.add(zombie);
+        }
+        textDisplayedSince = now;
+        //TODO display 'huge wave' message on screen
     }
 
 
