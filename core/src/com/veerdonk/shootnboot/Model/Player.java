@@ -14,6 +14,7 @@ import java.sql.Time;
 
 
 public class Player extends Character {
+    public int bombs;
     private float width = 32f;
     private float height = 32f;
     private Sprite playerSprite;
@@ -199,12 +200,24 @@ public class Player extends Character {
         }
     }
 
+    public int getBombs() {
+        return bombs;
+    }
+
+    public void setBombs(int bombs) {
+        this.bombs = bombs;
+    }
+
     public float getX(){
         return playerRect.getX();
     }
 
     public float getY(){
         return playerRect.getY();
+    }
+
+    public Vector2 getVector2(){
+        return new Vector2(playerRect.getX(), playerRect.getY());
     }
 
     public Sprite getPlayerSprite() {

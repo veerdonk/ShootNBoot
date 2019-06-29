@@ -5,6 +5,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -25,6 +26,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -53,6 +56,8 @@ import java.util.Random;
 
 public class GameScreen implements Screen {
     final ShootNBoot game;
+    private final Texture bombTexture;
+    private final Texture emptyBombTexture;
     private SoundController sc;
     private Gun machine;
     private Gun submachine;
@@ -209,9 +214,31 @@ public class GameScreen implements Screen {
         Skin skin = new Skin();
         skin.addRegions(buttonAtlas);
         Button.ButtonStyle style = new Button.ButtonStyle();
-        style.up = skin.getDrawable("blue_button_up");
-        style.down = skin.getDrawable("blue_button_down");
-        bombButton = new Button();
+        bombTexture = new Texture(Gdx.files.internal("bomb.png"));
+        emptyBombTexture = new Texture(Gdx.files.internal("bomb_empty.png"));
+        style.up = new TextureRegionDrawable(new TextureRegion(bombTexture));
+        style.down = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("bomb_down.png"))));
+        bombButton = new Button(style);
+        bombButton.setTransform(true);
+        bombButton.scaleBy(3.5f);
+        bombButton.setPosition((int) cameraController.getCamera().viewportWidth - 230, 35);
+        bombButton.addListener(new InputListener(){
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
+            {
+                return true;
+            }
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
+            {
+                if(player.bombs > 0){
+                    player.bombs -= 1;
+                }
+                detonateBomb(player.getVector2());
+            }
+        });
+        player.setBombs(1);
+        stage.addActor(bombButton);
         game.setScreen(new ShopScreen(game, this, player, guns));
     }
 
@@ -321,13 +348,7 @@ public class GameScreen implements Screen {
                 }
             }
         }
-//        else if (Gdx.input.isTouched()){
-//            Vector2 stageVec = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-//            if(stageVec.x > 400) {
-//                moveTouchPad(rotationTouchpadController.getTouchpad(), stageVec);
-//            }
-//        }
-        //Gdx.app.log("player mapnode", player.currentNode.toString());
+
         player.currentNode.playerInTile.removeIndex(0);//remove from old node
         player.currentNode = getCurrentMapNode(player.getX(), player.getY());//update node
         player.currentNode.playerInTile.add(player);//add player to updated node
@@ -408,8 +429,6 @@ public class GameScreen implements Screen {
 
         }
 
-        ////////////////////////////////////////////////
-
         ///////////////Zombie stuff////////////////////
         spawnZombie();
         for (int i = 0; i < activeZombies.size; i++) {
@@ -471,6 +490,24 @@ public class GameScreen implements Screen {
         game.font.draw(batch, "Att points: " + Integer.toString(player.getAttPoints()),camX-385, camY+200);
         game.font.draw(batch, "gold: " + Integer.toString(player.getMoney()),camX-385, camY+220);
         game.font.draw(batch, "Next shop at: " + Integer.toString(player.getLevel() + 2-player.getLevel()%2), camX-385, camY+240);
+
+        Array<Texture> bombTex = new Array<>();
+        switch(player.bombs){
+            case 0:
+                bombTex.add(emptyBombTexture, emptyBombTexture, emptyBombTexture);
+                break;
+            case 1:
+                bombTex.add(emptyBombTexture, emptyBombTexture, bombTexture);
+                break;
+            case 2:
+                bombTex.add(emptyBombTexture, bombTexture, bombTexture);
+                break;
+            case 3:
+                bombTex.add(bombTexture, bombTexture, bombTexture);
+        }
+        for(int i = 0; i < bombTex.size; i++){
+            batch.draw(bombTex.get(i), camX+325 + 25*i, camY+200, 22, 28);
+        }
 
         if(now - textDisplayedSince < 5000){
             game.font.setColor(Color.RED);
@@ -663,6 +700,22 @@ public class GameScreen implements Screen {
         }
     }
 
+    public void detonateBomb(Vector2 playerPosition){
+//        Array<MapNode> mapNodesToBomb = new Array<>();
+        MapNode curNode = getCurrentMapNode(playerPosition.x, playerPosition.y);
+        for(int i = -5; i <= 5; i++){
+            for(int j = -4; j <= 4; j++){
+                //TODO dont process nodes that don't exist
+                for(Zombie zombie : mapNodes[curNode.getxNode()+i][curNode.getyNode()+j].zombiesInTile){
+                    zombie.setHealth(-1);
+                }
+                //TODO add (staggered) explosions on screen
+            }
+        }
+
+
+    }
+
     public static <T extends Enum<?>> T randomEnum(Class<T> clazz){
         Random random = new Random();
         int x = random.nextInt(clazz.getEnumConstants().length);
@@ -692,6 +745,8 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         batch.dispose();
+        bombTexture.dispose();
+        emptyBombTexture.dispose();
         sc.dispose();
     }
 }
