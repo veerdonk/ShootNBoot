@@ -647,7 +647,6 @@ public class GameScreen implements Screen {
             activeZombies.add(zombie);
         }
         textDisplayedSince = now;
-        //TODO display 'huge wave' message on screen
     }
 
 
@@ -703,16 +702,31 @@ public class GameScreen implements Screen {
     public void detonateBomb(Vector2 playerPosition){
 //        Array<MapNode> mapNodesToBomb = new Array<>();
         MapNode curNode = getCurrentMapNode(playerPosition.x, playerPosition.y);
-        for(int i = -5; i <= 5; i++){
-            for(int j = -4; j <= 4; j++){
-                //TODO dont process nodes that don't exist
-                for(Zombie zombie : mapNodes[curNode.getxNode()+i][curNode.getyNode()+j].zombiesInTile){
-                    zombie.setHealth(-1);
+        for(int i = -4; i <= 4; i++){
+            for(int j = -3; j <= 3; j++){
+
+                if(curNode.getyNode()+j <= mapHeight/mapNodeHeight && curNode.getyNode()+j >= 0 && curNode.getxNode()+i <= mapWidth/mapNodeWidth && curNode.getxNode()+i >= 0) {
+                    for (Zombie zombie : mapNodes[curNode.getxNode() + i][curNode.getyNode() + j].zombiesInTile) {
+                        zombie.setHealth(-1);
+                    }
                 }
                 //TODO add (staggered) explosions on screen
             }
         }
-
+        //TODO location of explosions is not always around player: fix
+        int minX = (int) (playerPosition.x - 300);
+        int maxX = (int) (playerPosition.x + 300);
+        int minY = (int) (playerPosition.y - 190);
+        int maxY = (int) (playerPosition.y + 190);
+        for(int i = 0; i <= 50; i++){
+            int y = minX + random.nextInt(maxY-minY);
+            int x = minX + random.nextInt(maxX-minX);
+            Vector2 xy = new Vector2(x, y);
+            Gdx.app.log("xy", xy.toString());
+            Gdx.app.log("playerpos", playerPosition.toString());
+            Explosion ex = new Explosion(x, y, explosionTextures, 64, Color.WHITE, TimeUtils.millis() + random.nextInt(1000));
+            activeExplosions.add(ex);
+        }
 
     }
 
