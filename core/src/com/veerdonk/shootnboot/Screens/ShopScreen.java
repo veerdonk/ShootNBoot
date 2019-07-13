@@ -53,7 +53,7 @@ public class ShopScreen implements Screen {
     private int subCost = 80;
     private int machineCost = 120;
     private int shotgunCost = 150;
-    private int bombCost = 200;
+    private int bombCost = 500;
 
     public ShopScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
         this.parent = parent;
@@ -85,7 +85,7 @@ public class ShopScreen implements Screen {
         increaseHealth = getButton(style, "Health ++: 1 Att", 2,0);
         increaseSpeed = getButton(style, "Speed ++: 1 Att", 2,1);
         increaseDamage = getButton(style, "Damage ++: 1 Att", 2, 2);
-        bombButton = getButton(style, "Bomb: 100gp", 0,2);
+        bombButton = getButton(style, "Bomb: 500gp", 0,2);
         healButton = getButton(style, "Heal to full: " + healCost + "gp", 1,2);
 
         stage.addActor(shotGunButton);
