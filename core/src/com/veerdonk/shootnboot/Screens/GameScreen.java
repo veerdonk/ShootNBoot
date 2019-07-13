@@ -119,6 +119,7 @@ public class GameScreen implements Screen {
     private String swarmMessage = "A large group of zombies has spawned...";
     private long textDisplayedSince;
     private boolean swarmSpawned;
+    private Gun projectiles;
 
     public GameScreen(final ShootNBoot game) {
         this.game = game;
@@ -233,10 +234,11 @@ public class GameScreen implements Screen {
             {
                 if(player.bombs > 0){
                     player.bombs -= 1;
+                    detonateBomb(player.getVector2());
                 }
-                detonateBomb(player.getVector2());
             }
         });
+        projectiles = new Gun(zombieDamage*2, true);
         player.setBombs(1);
         stage.addActor(bombButton);
         game.setScreen(new ShopScreen(game, this, player, guns));
@@ -393,6 +395,13 @@ public class GameScreen implements Screen {
             boolean isRemoved = false;
             Bullet b = activeBullets.get(i);
             b.update(); // update bullet
+            if(b.gun.isEnemyProjectile){
+                bSprite.setColor(Color.RED);
+                bSprite.setSize(13,13);
+            }else{
+                bSprite.setColor(Color.WHITE);
+                bSprite.setSize(9,10);
+            }
             bSprite.setRotation(b.angle - 90f);
             bSprite.setPosition(b.position.x, b.position.y);
             bSprite.draw(batch);
@@ -406,19 +415,36 @@ public class GameScreen implements Screen {
                         isRemoved = true;
                     }
                 for (Zombie zombie : node.zombiesInTile) {
-                    //Gdx.app.log("zombie in tile", zombie.getZombieRect().toString());
-                    if (collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false) ||
-                            collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)) {
-                        zombie.hurt(b.gun.getDamage());
-                        sc.hurtZombie();
-                        node.removeZombieFromArray(zombie);
-                        zombie.recoil(b.calculateDirection(b.gun.getKnockBack(), b.direction.angle()));
-                        getCurrentMapNode(zombie.getX(), zombie.getY()).zombiesInTile.add(zombie);//update zombie array of node incase it was bumped to another node
-                        Explosion explosion = new Explosion(b.position.x, b.position.y, explosionTextures, 16, Color.WHITE);
-                        activeExplosions.add(explosion);
-                        bp.free(b);
-                        activeBullets.removeIndex(i);
-                        isRemoved = true;
+                    if(!isRemoved) {
+                        if (!b.gun.isEnemyProjectile) {
+                            if (collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false) ||
+                                    collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)) {
+                                zombie.hurt(b.gun.getDamage());
+                                sc.hurtZombie();
+                                node.removeZombieFromArray(zombie);
+                                zombie.recoil(b.calculateDirection(b.gun.getKnockBack(), b.direction.angle()));
+                                getCurrentMapNode(zombie.getX(), zombie.getY()).zombiesInTile.add(zombie);//update zombie array of node incase it was bumped to another node
+                                Explosion explosion = new Explosion(b.position.x, b.position.y, explosionTextures, 16, Color.WHITE);
+                                activeExplosions.add(explosion);
+                                bp.free(b);
+                                activeBullets.removeIndex(i);
+                                isRemoved = true;
+                            }
+                        }
+                    }
+                }
+                for (Player p : node.playerInTile) {
+                    if (!isRemoved) {
+                        if (b.gun.isEnemyProjectile) {
+                            if (collisionController.checkX(b.bulletRect, bSprite, player.getPlayerRect(), node, b.position.x, b.direction.x, false) ||
+                                    collisionController.checkY(b.bulletRect, bSprite, player.getPlayerRect(), node, b.position.y, b.direction.y, false)) {
+                                player.hurt(zombieDamage * 3);
+                                bp.free(b);
+                                activeExplosions.add(new Explosion(b.position.x, b.position.y, explosionTextures, 32, Color.RED));
+                                activeBullets.removeIndex(i);
+                                isRemoved = true;
+                            }
+                        }
                     }
                 }
             }
@@ -460,7 +486,23 @@ public class GameScreen implements Screen {
                 xpGained += zombie.getXpValue();
                 player.setMoney(player.getMoney() + zombie.getGp());
             } else {
+                if(zombie.isRanged){
+                    zombie.getZombieSprite().setColor(Color.RED);
+                    if(now - zombie.lastShot > 3000 &&
+                            zombie.getX() < player.getX()+ 400 &&
+                            zombie.getX() > player.getX() - 400 &&
+                            zombie.getY() > player.getY() - 200 &&
+                            zombie.getY() < player.getY() + 200){
+                        Bullet b = bp.obtain();
+                        b.speed = 2.5f;
+
+                        b.fire(zombie.getVector2(), player.getVector2(), player.getVector2().sub(zombie.getVector2()).angle(), projectiles);
+                        zombie.lastShot = now;
+                        activeBullets.add(b);
+                    }
+                }
                 zombie.getZombieSprite().draw(batch);
+                zombie.getZombieSprite().setColor(Color.WHITE);
                 curMapNode = getCurrentMapNode(zombie.getX(), zombie.getY());
                 curMapNode.zombiesInTile.add(zombie);
             }
@@ -613,11 +655,17 @@ public class GameScreen implements Screen {
             float zombieX = 50 + random.nextInt( 3150 - 50);
             float zombieY = 50 + random.nextInt(3150 - 50);
             Zombie zombie = zp.obtain();
-
             if(random.nextInt(33 - (int)(2*difficultyMultiplier)) == 1){
                 zombie.sendBossZombie(zombieSprite, zombieSpeed, zombieX, zombieY);
-            }else {
+            }
+            else {
                 zombie.sendZombie(zombieSprite, zombieSpeed, zombieX, zombieY, zombieDamage);
+            }
+
+            if(random.nextInt(13 - (int) (2*difficultyMultiplier)) == 1){
+                zombie.isRanged = true;
+                zombie.setZombieSpeed(zombie.getZombieSpeed()/2);
+                zombie.setXpValue(zombie.getXpValue() * 2);
             }
             activeZombies.add(zombie);
             sc.zombieAttack();
@@ -674,7 +722,7 @@ public class GameScreen implements Screen {
         }
 
         if(zombieSpawnRate > 100){
-            zombieSpawnRate -= 300*difficultyMultiplier;
+            zombieSpawnRate -= 200*difficultyMultiplier;
             if(zombieSpawnRate < 250){
                 zombieSpawnRate = 250;
             }
@@ -700,31 +748,25 @@ public class GameScreen implements Screen {
     }
 
     public void detonateBomb(Vector2 playerPosition){
-//        Array<MapNode> mapNodesToBomb = new Array<>();
         MapNode curNode = getCurrentMapNode(playerPosition.x, playerPosition.y);
-        for(int i = -4; i <= 4; i++){
-            for(int j = -3; j <= 3; j++){
-
-                if(curNode.getyNode()+j <= mapHeight/mapNodeHeight && curNode.getyNode()+j >= 0 && curNode.getxNode()+i <= mapWidth/mapNodeWidth && curNode.getxNode()+i >= 0) {
+        for(int i = -6; i <= 6; i++){
+            for(int j = -5; j <= 5; j++){
+                if(curNode.getyNode()+j < mapHeight/mapNodeHeight && curNode.getyNode()+j > 0 && curNode.getxNode()+i < mapWidth/mapNodeWidth && curNode.getxNode()+i > 0) {
                     for (Zombie zombie : mapNodes[curNode.getxNode() + i][curNode.getyNode() + j].zombiesInTile) {
                         zombie.setHealth(-1);
                     }
                 }
-                //TODO add (staggered) explosions on screen
             }
         }
-        //TODO location of explosions is not always around player: fix
-        int minX = (int) (playerPosition.x - 300);
-        int maxX = (int) (playerPosition.x + 300);
-        int minY = (int) (playerPosition.y - 190);
-        int maxY = (int) (playerPosition.y + 190);
-        for(int i = 0; i <= 50; i++){
-            int y = minX + random.nextInt(maxY-minY);
+        int minX = (int) (playerPosition.x - 400);
+        int maxX = (int) (playerPosition.x + 400);
+        int minY = (int) (playerPosition.y - 210);
+        int maxY = (int) (playerPosition.y + 210);
+        for(int i = 0; i <= 100; i++){
+            int y = minY + random.nextInt(maxY-minY);
             int x = minX + random.nextInt(maxX-minX);
-            Vector2 xy = new Vector2(x, y);
-            Gdx.app.log("xy", xy.toString());
-            Gdx.app.log("playerpos", playerPosition.toString());
-            Explosion ex = new Explosion(x, y, explosionTextures, 64, Color.WHITE, TimeUtils.millis() + random.nextInt(1000));
+            int size = 32 + random.nextInt(96);
+            Explosion ex = new Explosion(x, y, explosionTextures, size, Color.WHITE, TimeUtils.millis() + random.nextInt(500));
             activeExplosions.add(ex);
         }
 

@@ -46,7 +46,9 @@ public class Explosion {
     }
 
     public void update(float deltaTime){
-        statetime += deltaTime;
+        if(startTime - TimeUtils.millis() <= 0) {
+            statetime += deltaTime;
+        }
         if(animation.isAnimationFinished(statetime)){
             remove = true;
         }

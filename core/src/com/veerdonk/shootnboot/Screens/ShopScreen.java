@@ -25,6 +25,8 @@ import com.veerdonk.shootnboot.ShootNBoot;
 
 import java.util.Map;
 
+import jdk.nashorn.internal.runtime.PropertyListeners;
+
 public class ShopScreen implements Screen {
 
     final ShootNBoot game;
@@ -44,11 +46,14 @@ public class ShopScreen implements Screen {
     private TextButton increaseSpeed;
     private TextButton increaseDamage;
     private TextButton exitShop;
+    private TextButton bombButton;
+    private TextButton healButton;
 
     private int pistolCost = 50;
     private int subCost = 80;
     private int machineCost = 120;
     private int shotgunCost = 150;
+    private int bombCost = 200;
 
     public ShopScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
         this.parent = parent;
@@ -63,6 +68,8 @@ public class ShopScreen implements Screen {
         mapProperties = tiledMap.getProperties();
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
+        final int healCost = (int) ((player.getMaxHealth() - player.getHealth()) * 2);
+
         TextureAtlas buttonAtlas = new TextureAtlas(Gdx.files.internal("ui/button_blue.atlas"));
         Skin skin = new Skin();
         skin.addRegions(buttonAtlas);
@@ -74,10 +81,12 @@ public class ShopScreen implements Screen {
         pistolButton = getButton(style, "Pistol: 50gp", 1,0);
         submachineButton = getButton(style, "Sub-machine gun: 80gp", 0,1);
         machineButton = getButton(style, "Machine gun: 120gp", 1,1);
-        exitShop = getButton(style, "Exit Shop", 1,2);
+        exitShop = getButton(style, "Exit Shop", 1,3);
         increaseHealth = getButton(style, "Health ++: 1 Att", 2,0);
         increaseSpeed = getButton(style, "Speed ++: 1 Att", 2,1);
         increaseDamage = getButton(style, "Damage ++: 1 Att", 2, 2);
+        bombButton = getButton(style, "Bomb: 100gp", 0,2);
+        healButton = getButton(style, "Heal to full: " + healCost + "gp", 1,2);
 
         stage.addActor(shotGunButton);
         stage.addActor(pistolButton);
@@ -87,6 +96,8 @@ public class ShopScreen implements Screen {
         stage.addActor(increaseHealth);
         stage.addActor(increaseDamage);
         stage.addActor(increaseSpeed);
+        stage.addActor(bombButton);
+        stage.addActor(healButton);
         
         Gdx.input.setInputProcessor(stage);
 
@@ -109,6 +120,47 @@ public class ShopScreen implements Screen {
 
             }
         });
+
+        bombButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
+            {
+                return true;
+            }
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
+            {
+                if(player.bombs < 3 && player.getMoney() >= bombCost){
+                    player.setBombs(player.bombs + 1);
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - bombCost);
+                }else{
+                    player.sc.playError();
+                }
+
+            }
+        });
+
+        healButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
+            {
+                return true;
+            }
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
+            {
+                if(player.getMoney() >= healCost){
+                    player.setHealth(player.getMaxHealth());
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - healCost);
+                }else{
+                    player.sc.playError();
+                }
+
+            }
+        });
+
         submachineButton.addListener(new InputListener() {
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
@@ -295,6 +347,9 @@ public class ShopScreen implements Screen {
                 break;
             case 2:
                 ypos = 175;
+                break;
+            case 3:
+                ypos = 85;
                 break;
         }
         button.setPosition(xpos, ypos);

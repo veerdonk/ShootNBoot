@@ -1,16 +1,19 @@
 package com.veerdonk.shootnboot.Model;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.veerdonk.shootnboot.Screens.GameScreen;
 import com.veerdonk.shootnboot.ShootNBoot;
 
 import java.util.Objects;
 
 public class Zombie extends Character implements Pool.Poolable {
+    public Color color;
     private float width = 15f;
     private float height = 15f;
     private Sprite zombieSprite;
@@ -20,6 +23,8 @@ public class Zombie extends Character implements Pool.Poolable {
     private int xpValue = 30;
     private int gp = 10;
     public boolean isBoss = false;
+    public boolean isRanged = false;
+    public long lastShot = TimeUtils.millis();
 
     public void sendZombie(Sprite zombieSprite, float zombieSpeed, float initialX, float initialY, int damage) {
         this.zombieSprite = zombieSprite;
@@ -77,6 +82,10 @@ public class Zombie extends Character implements Pool.Poolable {
         return zombieRect;
     }
 
+    public Vector2 getVector2(){
+        return new Vector2(getX(), getY());
+    }
+
     public void setZombieRect(Rectangle zombieRect) {
         this.zombieRect = zombieRect;
     }
@@ -111,12 +120,16 @@ public class Zombie extends Character implements Pool.Poolable {
         this.zombieSprite = null;
         this.setHealth(100);
         this.setMaxHealth(100);
-
+        this.color = null;
         if(isBoss){
             this.width = 15f;
             this.height = 15f;
             this.xpValue = 30;
             this.setHitFreq(5);
+        }
+        if(isRanged){
+            xpValue = 30;
+            this.isRanged = false;
         }
     }
 
@@ -147,5 +160,13 @@ public class Zombie extends Character implements Pool.Poolable {
 
     public void setHeight(float height) {
         this.height = height;
+    }
+
+    public float getZombieSpeed() {
+        return zombieSpeed;
+    }
+
+    public void setZombieSpeed(float zombieSpeed) {
+        this.zombieSpeed = zombieSpeed;
     }
 }

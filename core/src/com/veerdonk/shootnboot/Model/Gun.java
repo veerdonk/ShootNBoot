@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 
 public class Gun {
+    public boolean isEnemyProjectile;
     private Sprite gunSprite;
     private Sprite playerGunSprite;
     private GunType gunType;
@@ -16,6 +17,11 @@ public class Gun {
     private float knockBack;
     private String soundKey;
 
+    public Gun(int damage, boolean isEnemyProjectile){
+        this.damage = damage;
+        this.isEnemyProjectile = isEnemyProjectile;
+    }
+
     public Gun(Sprite gunSprite, Sprite playerGunSprite, GunType gunType, float x, float y, String soundKey) {
         this.playerGunSprite = playerGunSprite;
         this.gunSprite = gunSprite;
@@ -25,6 +31,7 @@ public class Gun {
         this.gunSprite.setPosition(x, y);
         this.gunRect = new Rectangle(x, y, 5, 5);
         this.soundKey = soundKey;
+        this.isEnemyProjectile = false;
 
         switch (gunType){
             case PISTOL:

@@ -20,6 +20,7 @@ public class Bullet implements Pool.Poolable {
     public void reset() {
         this.position.set(0,0);
         this.direction.set(0,0);
+        this.speed = 5f;
         this.angle = 0;
         this.gun = null;
     }
