@@ -3,21 +3,15 @@ package com.veerdonk.shootnboot.Screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.scenes.scene2d.Event;
-import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Model.Player;
@@ -26,9 +20,7 @@ import com.veerdonk.shootnboot.Util.ButtonUtil;
 
 import java.util.Map;
 
-import jdk.nashorn.internal.runtime.PropertyListeners;
-
-public class ShopScreen implements Screen {
+public class WeaponUpgradeScreen implements Screen {
 
     final ShootNBoot game;
     private final Screen parent;
@@ -39,24 +31,34 @@ public class ShopScreen implements Screen {
     TiledMap tiledMap;
     TiledMapRenderer tiledMapRenderer;
     MapProperties mapProperties;
+
     private TextButton shotGunButton;
     private TextButton pistolButton;
     private TextButton submachineButton;
     private TextButton machineButton;
-    private TextButton increaseHealth;
-    private TextButton increaseSpeed;
-    private TextButton increaseDamage;
-    private TextButton exitShop;
-    private TextButton bombButton;
-    private TextButton healButton;
+    private TextButton backToShop;
+
+    private TextButton increasePistolDamage;
+    private TextButton increaseSubmachineDamage;
+    private TextButton increaseMachineDamage;
+    private TextButton increaseShotgunDamage;
+
+    private TextButton pistolAmmo;
+    private TextButton submachineAmmo;
+    private TextButton machineAmmo;
+    private TextButton shotgunAmmo;
 
     private int pistolCost = 50;
     private int subCost = 80;
     private int machineCost = 120;
     private int shotgunCost = 150;
-    private int bombCost = 500;
 
-    public ShopScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
+    private int pistolAmmoCost = 1; //TODO update costs + balance
+    private int subAmmoCost = 5;
+    private int machineAmmoCost = 10;
+    private int shotgunAmmoCost = 20;
+
+    public WeaponUpgradeScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
         this.parent = parent;
         this.game = game;
         camera = new OrthographicCamera();
@@ -69,24 +71,46 @@ public class ShopScreen implements Screen {
         mapProperties = tiledMap.getProperties();
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
-        final int healCost = (int) ((player.getMaxHealth() - player.getHealth()) * 2);
-        exitShop = bu.getButton("Exit Shop", 1,3);
-        increaseHealth = bu.getButton("Health ++: 1 Att", 2,0);
-        increaseSpeed = bu.getButton("Speed ++: 1 Att", 2,1);
-        increaseDamage = bu.getButton("Damage ++: 1 Att", 2, 2);
-        bombButton = bu.getButton("Bomb: 500gp", 0,2);
-        healButton = bu.getButton("Heal to full: " + healCost + "gp", 1,2);
 
-        stage.addActor(exitShop);
-        stage.addActor(increaseHealth);
-        stage.addActor(increaseDamage);
-        stage.addActor(increaseSpeed);
-        stage.addActor(bombButton);
-        stage.addActor(healButton);
-        
+        pistolButton = bu.getButton("Pistol: 50gp", 0,0);
+        submachineButton = bu.getButton("Sub-machine gun: 80gp", 1,0);
+        machineButton = bu.getButton("Machine gun: 120gp", 2,0);
+        shotGunButton = bu.getButton("Shotgun: 150gp", 3,0);
+
+        increasePistolDamage = bu.getButton("Pistol damage ++: 1 Att", 0, 1);
+        increaseSubmachineDamage = bu.getButton("Submachinegun damage ++: 1 Att", 1, 1);
+        increaseMachineDamage = bu.getButton("Machinegun damage ++: 1 Att", 2, 1);
+        increaseShotgunDamage = bu.getButton("Shotgun damage ++: 1 Att", 3, 1);
+
+        pistolAmmo = bu.getButton("Pistol ammo: " + pistolAmmoCost, 0, 2);
+        submachineAmmo = bu.getButton("Submachinegun ammo: " + subAmmoCost, 1, 2);
+        machineAmmo = bu.getButton("Machinegun ammo: " + machineAmmo, 2, 2);
+        shotgunAmmo = bu.getButton("Shotgun ammo: " + shotgunAmmo, 3, 2);
+
+        backToShop = bu.getButton("Back to Shop", 0,3);
+
+
+        stage.addActor(shotGunButton);
+        stage.addActor(pistolButton);
+        stage.addActor(submachineButton);
+        stage.addActor(machineButton);
+
+        stage.addActor(increasePistolDamage);
+        stage.addActor(increaseSubmachineDamage);
+        stage.addActor(increaseMachineDamage);
+        stage.addActor(increaseShotgunDamage);
+
+        stage.addActor(pistolAmmo);
+        stage.addActor(submachineAmmo);
+        stage.addActor(machineAmmo);
+        stage.addActor(shotgunAmmo);
+
+        stage.addActor(backToShop);
+
         Gdx.input.setInputProcessor(stage);
 
-        bombButton.addListener(new InputListener() {
+
+        pistolButton.addListener(new InputListener() {
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
             {
@@ -95,10 +119,10 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                if(player.bombs < 3 && player.getMoney() >= bombCost){
-                    player.setBombs(player.bombs + 1);
+                if(player.getMoney() >= pistolCost){
+                    player.setWeapon(guns.get("pistol"));
                     player.sc.playDing();
-                    player.setMoney(player.getMoney() - bombCost);
+                    player.setMoney(player.getMoney() - pistolCost);
                 }else{
                     player.sc.playError();
                 }
@@ -106,7 +130,7 @@ public class ShopScreen implements Screen {
             }
         });
 
-        healButton.addListener(new InputListener() {
+        submachineButton.addListener(new InputListener() {
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
             {
@@ -115,10 +139,29 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                if(player.getMoney() >= healCost){
-                    player.setHealth(player.getMaxHealth());
+                if(player.getMoney() >= subCost){
+                    player.setWeapon(guns.get("submachine"));
                     player.sc.playDing();
-                    player.setMoney(player.getMoney() - healCost);
+                    player.setMoney(player.getMoney() - subCost);
+                }else{
+                    player.sc.playError();
+                }
+
+            }
+        });
+        machineButton.addListener(new InputListener() {
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
+            {
+                return true;
+            }
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
+            {
+                if(player.getMoney() >= machineCost){
+                    player.setWeapon(guns.get("machine"));
+                    player.sc.playDing();
+                    player.setMoney(player.getMoney() - machineCost);
                 }else{
                     player.sc.playError();
                 }
@@ -126,7 +169,7 @@ public class ShopScreen implements Screen {
             }
         });
 
-        increaseHealth.addListener(new InputListener() {
+        shotGunButton.addListener(new InputListener() {
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
             {
@@ -135,14 +178,22 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                if(player.increaseAttHealth()){
+                if(player.getMoney() >= shotgunCost){
+                    player.setWeapon(guns.get("shotgun"));
                     player.sc.playDing();
+                    player.setMoney(player.getMoney() - shotgunCost);
                 }else{
                     player.sc.playError();
                 }
+
             }
         });
-        increaseSpeed.addListener(new InputListener() {
+
+
+
+
+
+        backToShop.addListener(new InputListener(){
             @Override
             public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
             {
@@ -151,37 +202,12 @@ public class ShopScreen implements Screen {
             @Override
             public void touchUp (InputEvent event, float x, float y, int pointer, int button)
             {
-                if(player.increaseAttSpeed()){
-                    player.sc.playDing();
-                }else{
-                    player.sc.playError();
-                }
-            }
-        });
-        increaseDamage.addListener(new InputListener() {
-            @Override
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
-            {
-                return true;
-            }
-            @Override
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
-            {
-                if(player.increaseAttDamage()){
-                    player.sc.playDing();
-                }else{
-                    player.sc.playError();
-                }
-            }
-        });
-        exitShop.addListener(new EventListener() {
-            @Override
-            public boolean handle(Event event) {
-                returnToGame();
-                return true;
+                returnToShop();
             }
         });
     }
+
+
 
     @Override
     public void show() {
@@ -230,7 +256,7 @@ public class ShopScreen implements Screen {
 
     }
 
-    public void returnToGame(){
+    private void returnToShop() {
         game.setScreen(parent);
         parent.show();
     }
