@@ -39,10 +39,7 @@ public class ShopScreen implements Screen {
     TiledMap tiledMap;
     TiledMapRenderer tiledMapRenderer;
     MapProperties mapProperties;
-    private TextButton shotGunButton;
-    private TextButton pistolButton;
-    private TextButton submachineButton;
-    private TextButton machineButton;
+    private TextButton upgradeGuns;
     private TextButton increaseHealth;
     private TextButton increaseSpeed;
     private TextButton increaseDamage;
@@ -50,10 +47,6 @@ public class ShopScreen implements Screen {
     private TextButton bombButton;
     private TextButton healButton;
 
-    private int pistolCost = 50;
-    private int subCost = 80;
-    private int machineCost = 120;
-    private int shotgunCost = 150;
     private int bombCost = 500;
 
     public ShopScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
@@ -75,7 +68,8 @@ public class ShopScreen implements Screen {
         increaseSpeed = bu.getButton("Speed ++: 1 Att", 2,1);
         increaseDamage = bu.getButton("Damage ++: 1 Att", 2, 2);
         bombButton = bu.getButton("Bomb: 500gp", 0,2);
-        healButton = bu.getButton("Heal to full: " + healCost + "gp", 1,2);
+        healButton = bu.getButton("Heal to full: " + healCost + "gp", 2,3);
+        upgradeGuns = bu.getButton("Gun upgrades", 0, 1);
 
         stage.addActor(exitShop);
         stage.addActor(increaseHealth);
@@ -83,6 +77,7 @@ public class ShopScreen implements Screen {
         stage.addActor(increaseSpeed);
         stage.addActor(bombButton);
         stage.addActor(healButton);
+        stage.addActor(upgradeGuns);
         
         Gdx.input.setInputProcessor(stage);
 
@@ -174,6 +169,20 @@ public class ShopScreen implements Screen {
                 }
             }
         });
+
+        upgradeGuns.addListener(new InputListener(){
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
+            {
+                return true;
+            }
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
+            {
+                game.setScreen(new WeaponUpgradeScreen(game, ShopScreen.this, player, guns));
+            }
+        });
+
         exitShop.addListener(new EventListener() {
             @Override
             public boolean handle(Event event) {

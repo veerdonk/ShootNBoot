@@ -26,13 +26,16 @@ public class ButtonUtil {
         float ypos = 0;
         switch(col){
             case 0:
-                xpos = 50;
+                xpos = 10;
                 break;
             case 1:
-                xpos = 300;
+                xpos = 210;
                 break;
             case 2:
-                xpos = 550;
+                xpos = 420;
+                break;
+            case 3:
+                xpos = 630;
                 break;
         }
 

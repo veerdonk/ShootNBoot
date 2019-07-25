@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.veerdonk.shootnboot.Model.AmmoPack;
 import com.veerdonk.shootnboot.Model.Gun;
 import com.veerdonk.shootnboot.Model.MapNode;
 import com.veerdonk.shootnboot.Model.PowerUp;
@@ -50,6 +51,15 @@ public class CollisionController {
                     if(foundGunX || foundGunY){
                         gun.pickedUp = true;
                         node.playerInTile.get(0).setWeapon(gun);
+                    }
+                }
+            }
+            for(AmmoPack ammoPack : node.ammoPacksInTile){
+                if(
+                    checkX(rect, sprite, ammoPack.getAmmoRect(), node, endx, percentX, false) ||
+                    checkY(rect, sprite, ammoPack.getAmmoRect(), node, endy, percentY, false)){
+                    if(node.playerInTile.size != 0){
+                        ammoPack.isCollected = true;
                     }
                 }
             }

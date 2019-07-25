@@ -43,6 +43,10 @@ public class Player extends Character {
     private float oldSpeed;
     private int oldDamage;
     private float oldFireRate;
+    public int pistolAmmo;
+    public int subAmmo;
+    public int machineAmmo;
+    public int shotgunAmmo;
 
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode, SoundController sc) {
@@ -54,6 +58,7 @@ public class Player extends Character {
         this.currentNode = currentNode;
         this.sc = sc;
         this.oldSpeed = playerSpeed;
+        pistolAmmo = 100;
     }
 
     public void setPosition(float x, float y){

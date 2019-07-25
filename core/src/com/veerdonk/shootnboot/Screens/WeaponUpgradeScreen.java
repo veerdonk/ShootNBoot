@@ -189,6 +189,76 @@ public class WeaponUpgradeScreen implements Screen {
             }
         });
 
+        pistolAmmo.addListener(new InputListener(){
+           @Override
+           public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+               return true;
+           }
+
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+
+               if(player.getMoney() >= pistolAmmoCost){
+                   player.sc.playDing();
+                   //TODO add ammo to player/gun
+               }else{
+                   player.sc.playError();
+               }
+
+            }
+        });
+
+        submachineAmmo.addListener(new InputListener(){
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                if(player.getMoney() >= subAmmoCost){
+                    player.sc.playDing();
+                    //TODO add ammo to player/gun
+                }else{
+                    player.sc.playError();
+                }
+            }
+        });
+
+        machineAmmo.addListener(new InputListener(){
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                if(player.getMoney() >= machineAmmoCost){
+                    player.sc.playDing();
+                    //TODO add ammo to player/gun
+                }else{
+                    player.sc.playError();
+                }
+            }
+        });
+
+        shotgunAmmo.addListener(new InputListener(){
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button){
+                return true;
+            }
+
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button){
+                if(player.getMoney() >= shotgunAmmoCost){
+                    player.sc.playDing();
+                    //TODO add ammo to player/gun
+                }else{
+                    player.sc.playError();
+                }
+            }
+        });
+
 
 
 
