@@ -49,9 +49,9 @@ public class WeaponUpgradeScreen implements Screen {
     private TextButton shotgunAmmo;
 
     private int pistolCost = 50;
-    private int subCost = 1;
-    private int machineCost = 1;
-    private int shotgunCost = 1;
+    private int subCost = 80;
+    private int machineCost = 120;
+    private int shotgunCost = 150;
 
     private int pistolAmmoCost = 50; //TODO create maxammo(and buy to max)
     private int subAmmoCost = 50;
@@ -72,20 +72,20 @@ public class WeaponUpgradeScreen implements Screen {
         tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap);
 
 
-        pistolButton = bu.getButton("Pistol: 50gp", 0,0);
-        submachineButton = bu.getButton("SMG: 80gp", 1,0);
-        machineButton = bu.getButton("LMG: 120gp", 2,0);
-        shotGunButton = bu.getButton("Shotgun: 150gp", 3,0);
+        pistolButton = bu.getButton(String.format("buy Pistol: %dgp", pistolCost), 0,0);
+        submachineButton = bu.getButton(String.format("buy SMG: %dgp", subCost), 1,0);
+        machineButton = bu.getButton(String.format("buy LMG: %dgp", machineCost), 2,0);
+        shotGunButton = bu.getButton(String.format("buy Shotgun: %dgp", shotgunCost), 3,0);
 
         increasePistolDamage = bu.getButton("Pistol damage ++: 1 Att", 0, 1);
         increaseSubmachineDamage = bu.getButton("SMG damage ++: 1 Att", 1, 1);
         increaseMachineDamage = bu.getButton("LMG damage ++: 1 Att", 2, 1);
         increaseShotgunDamage = bu.getButton("Shotgun damage ++: 1 Att", 3, 1);
 
-        pistolAmmo = bu.getButton("Pistol ammo: " + pistolAmmoCost, 0, 2);
-        submachineAmmo = bu.getButton("SMG ammo: " + subAmmoCost, 1, 2);
-        machineAmmo = bu.getButton("LMG ammo: " + machineAmmo, 2, 2);
-        shotgunAmmo = bu.getButton("Shotgun ammo: " + shotgunAmmo, 3, 2);
+        pistolAmmo = bu.getButton(String.format("Pistol ammo: %dgp", pistolAmmoCost), 0, 2);
+        submachineAmmo = bu.getButton(String.format("SMG ammo: %dgp", subAmmoCost), 1, 2);
+        machineAmmo = bu.getButton(String.format("LMG ammo: %dgp", machineAmmoCost), 2, 2);
+        shotgunAmmo = bu.getButton(String.format("Shotgun ammo: %dgp", shotgunAmmoCost), 3, 2);
 
         backToShop = bu.getButton("Back to Shop", 0,3);
 

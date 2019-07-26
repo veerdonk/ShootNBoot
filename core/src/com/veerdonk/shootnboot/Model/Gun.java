@@ -42,16 +42,16 @@ public class Gun {
             case SHOTGUN:
                 this.fireRate = 1000;
                 this.damage = 10;
-                this.knockBack = 8f;
+                this.knockBack = 10f;
                 break;
             case MACHINEGUN:
                 this.fireRate = 300;
-                this.damage = 18;
-                this.knockBack = 5f;
+                this.damage = 20;
+                this.knockBack = 7f;
                 break;
             case SUBMACHINE:
-                this.fireRate = 250;
-                this.damage = 14;
+                this.fireRate = 200;
+                this.damage = 10;
                 this.knockBack = 3f;
                 break;
         }
