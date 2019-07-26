@@ -117,7 +117,9 @@ public class GameScreen implements Screen {
     private Gun projectiles;
     private long lastAmmoPack = TimeUtils.millis();
     private Sprite ammoSprite;
+    private Sprite ammoSpriteUI;
     private Array<AmmoPack> activeAmmoPacks;
+    private Button swapButton;
 
     public GameScreen(final ShootNBoot game) {
         this.game = game;
@@ -236,6 +238,30 @@ public class GameScreen implements Screen {
                 }
             }
         });
+
+        Button.ButtonStyle swapStyle = new Button.ButtonStyle();
+        swapStyle.up = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("swap.png"))));
+        swapStyle.down = new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("swap_down.png"))));
+        swapButton = new Button(swapStyle);
+        swapButton.setTransform(true);
+        swapButton.scaleBy(1.5f);
+        swapButton.setPosition((int) cameraController.getCamera().viewportWidth - 240, 120);
+        stage.addActor(swapButton);
+        swapButton.addListener(new InputListener(){
+            @Override
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button)
+            {
+                return true;
+            }
+            @Override
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button)
+            {
+                if(player.weapons.size > 0) {
+                    player.switchWeapon();
+                }
+            }
+        });
+
         projectiles = new Gun(zombieDamage*2, true);
         player.setBombs(1);
         stage.addActor(bombButton);
@@ -244,6 +270,8 @@ public class GameScreen implements Screen {
         activeAmmoPacks = new Array<AmmoPack>();
         Texture tex = new Texture(Gdx.files.internal("ammoPack.png"));
         ammoSprite = new Sprite(tex); //TODO move sprite to texture atlas
+        ammoSpriteUI = new Sprite(ammoSprite);
+
     }
 
     @Override
@@ -289,12 +317,6 @@ public class GameScreen implements Screen {
                 player.rotate(new Vector2(touchpadController.xPercent(), touchpadController.yPercent()));
             }
         }
-//        else if (Gdx.input.isTouched()){
-//            Vector2 stageVec = stage.screenToStageCoordinates(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-//            if(stageVec.x < 400) {
-//                moveTouchPad(touchpadController.getTouchpad(), stageVec);
-//            }
-//        }
         int healthLost = player.getHealth();
         player.move(
                 touchpadController.xPercent(),
@@ -315,39 +337,42 @@ public class GameScreen implements Screen {
             //fires a bullet when the right touchpad is touched
 
             if (player.getWeapon() != null) {
-                if (now - lastShot > player.getWeapon().getFireRate()) {//TODO fix fire location to be the actual gun
-                    if (player.getWeapon().getGunType() == GunType.SHOTGUN) {
-                        //fire multiple bullets with spread
-                        for (int i = 0; i < 6; i++) {
+                if (player.getAmmo(player.getWeapon().getGunType()) >= 1) {
+                    if (now - lastShot > player.getWeapon().getFireRate()) {//TODO fix fire location to be the actual gun
+                        player.useAmmo(player.getWeapon().getGunType());
+                        if (player.getWeapon().getGunType() == GunType.SHOTGUN) {
+                            //fire multiple bullets with spread
+                            for (int i = 0; i < 6; i++) {
+                                Bullet b = bp.obtain();
+                                b.fireRandom(new Vector2(
+                                                player.getX(),
+                                                player.getY()),
+                                        new Vector2(
+                                                rotVec.x,
+                                                rotVec.y),
+                                        rotVec.angle(),
+                                        player.getWeapon(),
+                                        25
+                                );
+                                activeBullets.add(b);
+                                lastShot = now;
+                            }
+                            sc.playSound("shotgun");
+                        } else {
                             Bullet b = bp.obtain();
-                            b.fireRandom(new Vector2(
+                            b.fire(new Vector2(
                                             player.getX(),
                                             player.getY()),
                                     new Vector2(
                                             rotVec.x,
                                             rotVec.y),
                                     rotVec.angle(),
-                                    player.getWeapon(),
-                                    25
+                                    player.getWeapon()
                             );
+                            sc.playSound(b.gun.getSoundKey());
                             activeBullets.add(b);
                             lastShot = now;
                         }
-                        sc.playSound("shotgun");
-                    } else {
-                        Bullet b = bp.obtain();
-                        b.fire(new Vector2(
-                                        player.getX(),
-                                        player.getY()),
-                                new Vector2(
-                                        rotVec.x,
-                                        rotVec.y),
-                                rotVec.angle(),
-                                player.getWeapon()
-                        );
-                        sc.playSound(b.gun.getSoundKey());
-                        activeBullets.add(b);
-                        lastShot = now;
                     }
                 }
             }
@@ -368,7 +393,7 @@ public class GameScreen implements Screen {
             AmmoPack ammoPack = activeAmmoPacks.get(i);
             if(ammoPack.isCollected){
                 //TODO play sound
-                player.getAmmo(ammoPack.getAmmoType());
+                player.increaseAmmo(ammoPack.getAmmoType());
                 activeAmmoPacks.removeIndex(i);
                 //ammoPack.getAmmoSprite().setPosition(0,0);
                 getCurrentMapNode(ammoPack.getAmmoRect().getX(), ammoPack.getAmmoRect().getY()).removeAmmoPackFromArray(ammoPack);
@@ -553,6 +578,25 @@ public class GameScreen implements Screen {
         game.font.draw(batch, "gold: " + Integer.toString(player.getMoney()),camX-385, camY+220);
         game.font.draw(batch, "Next shop at: " + Integer.toString(player.getLevel() + 2-player.getLevel()%2), camX-385, camY+240);
 
+        //Display ammo icons
+        ammoSpriteUI.setSize(20,20);
+        ammoSpriteUI.setColor(Color.GRAY);
+        ammoSpriteUI.setPosition(camX+375, camY+140);
+        ammoSpriteUI.draw(batch);
+        ammoSpriteUI.setColor(Color.BLUE);
+        ammoSpriteUI.setPosition(camX+375, camY+120);
+        ammoSpriteUI.draw(batch);
+        ammoSpriteUI.setColor(Color.RED);
+        ammoSpriteUI.setPosition(camX+375, camY+100);
+        ammoSpriteUI.draw(batch);
+        ammoSpriteUI.setColor(Color.ORANGE);
+        ammoSpriteUI.setPosition(camX+375, camY+80);
+        ammoSpriteUI.draw(batch);
+        game.font.draw(batch, Integer.toString(player.pistolAmmo), camX+335, camY+160);
+        game.font.draw(batch, Integer.toString(player.subAmmo), camX+335, camY+140);
+        game.font.draw(batch, Integer.toString(player.machineAmmo), camX+335, camY+120);
+        game.font.draw(batch, Integer.toString(player.shotgunAmmo), camX+335, camY+100);
+
         Array<Texture> bombTex = new Array<>();
         switch(player.bombs){
             case 0:
@@ -620,8 +664,6 @@ public class GameScreen implements Screen {
             GunType ammoType = randomEnum(GunType.class);
             float randX = 50 + random.nextInt( 3150 - 50);
             float randY = 50 + random.nextInt( 3150 - 50);
-            randX = 260;
-            randY = 260;
             AmmoPack ammoPack = new AmmoPack(ammoSprite, new Rectangle(randX, randY, 30, 30), ammoType);
             ammoPack.getAmmoSprite().setSize(30, 30);
             ammoPack.getAmmoSprite().setPosition(randX, randY);

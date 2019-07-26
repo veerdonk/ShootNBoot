@@ -133,6 +133,15 @@ public class Gun {
     public String getSoundKey() {
         return soundKey;
     }
+
+    @Override
+    public String toString() {
+        return "Gun{" +
+                "gunType=" + gunType +
+                ", fireRate=" + fireRate +
+                ", damage=" + damage +
+                '}';
+    }
 }
 
 

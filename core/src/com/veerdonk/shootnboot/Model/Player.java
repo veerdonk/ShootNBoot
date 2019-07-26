@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
 import com.veerdonk.shootnboot.Controllers.SoundController;
@@ -47,6 +48,7 @@ public class Player extends Character {
     public int subAmmo;
     public int machineAmmo;
     public int shotgunAmmo;
+    public Queue<Gun> weapons;
 
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode, SoundController sc) {
@@ -58,6 +60,7 @@ public class Player extends Character {
         this.currentNode = currentNode;
         this.sc = sc;
         this.oldSpeed = playerSpeed;
+        this.weapons = new Queue<>();
         pistolAmmo = 100;
     }
 
@@ -108,12 +111,35 @@ public class Player extends Character {
         return weapon;
     }
 
-    public void setWeapon(Gun weapon) {
-        this.weapon = weapon;
+    public void setWeapon(Gun newWeapon) {
+        if(weapon != null){
+            boolean alreadyHave = false;
+            for(Gun g : weapons){
+                if(weapon.getGunType() == g.getGunType()){
+                alreadyHave = true;
+                }
+            }
+            if(!alreadyHave) {
+                this.weapons.addLast(weapon);
+            }
+        }
+        this.weapon = newWeapon;
         this.playerSprite = weapon.getPlayerGunSprite();
         this.weapon.setDamage(this.weapon.getDamage() + damage);
         this.oldDamage = weapon.getDamage();
         this.oldFireRate = weapon.getFireRate();
+    }
+
+    public void switchWeapon(){
+        Gun nextWeapon = weapons.removeFirst();
+        this.weapons.addLast(weapon);
+        this.weapon = nextWeapon;
+        this.playerSprite = nextWeapon.getPlayerGunSprite();
+        this.oldDamage = nextWeapon.getDamage();
+        this.oldFireRate = nextWeapon.getFireRate();
+        Gdx.app.log("switched to: ", nextWeapon.toString());
+        Gdx.app.log("weapong queue: ", weapons.toString());
+
     }
 
     public boolean getXp(int gottenXp){
@@ -277,7 +303,7 @@ public class Player extends Character {
         return speedActive;
     }
 
-    public void getAmmo(GunType ammoType) {
+    public void increaseAmmo(GunType ammoType) {
         switch(ammoType){
             case PISTOL:
                 pistolAmmo += 50;
@@ -291,6 +317,37 @@ public class Player extends Character {
             case SHOTGUN:
                 shotgunAmmo += 15;
                 break;
+        }
+    }
+
+    public void useAmmo(GunType gt){
+        switch(gt){
+            case PISTOL:
+                pistolAmmo -= 1;
+                break;
+            case SUBMACHINE:
+                subAmmo -= 1;
+                break;
+            case MACHINEGUN:
+                machineAmmo -= 1;
+                break;
+            case SHOTGUN:
+                shotgunAmmo -= 1;
+                break;
+        }
+    }
+    public int getAmmo(GunType gt){
+        switch(gt){
+            case PISTOL:
+                return pistolAmmo;
+            case SUBMACHINE:
+                return subAmmo;
+            case MACHINEGUN:
+                return machineAmmo;
+            case SHOTGUN:
+                return shotgunAmmo;
+            default:
+                return 0;
         }
     }
 }

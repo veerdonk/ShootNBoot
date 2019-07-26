@@ -49,9 +49,9 @@ public class WeaponUpgradeScreen implements Screen {
     private TextButton shotgunAmmo;
 
     private int pistolCost = 50;
-    private int subCost = 80;
-    private int machineCost = 120;
-    private int shotgunCost = 150;
+    private int subCost = 1;
+    private int machineCost = 1;
+    private int shotgunCost = 1;
 
     private int pistolAmmoCost = 50; //TODO create maxammo(and buy to max)
     private int subAmmoCost = 50;
@@ -73,18 +73,18 @@ public class WeaponUpgradeScreen implements Screen {
 
 
         pistolButton = bu.getButton("Pistol: 50gp", 0,0);
-        submachineButton = bu.getButton("Sub-machine gun: 80gp", 1,0);
-        machineButton = bu.getButton("Machine gun: 120gp", 2,0);
+        submachineButton = bu.getButton("SMG: 80gp", 1,0);
+        machineButton = bu.getButton("LMG: 120gp", 2,0);
         shotGunButton = bu.getButton("Shotgun: 150gp", 3,0);
 
         increasePistolDamage = bu.getButton("Pistol damage ++: 1 Att", 0, 1);
-        increaseSubmachineDamage = bu.getButton("Submachinegun damage ++: 1 Att", 1, 1);
-        increaseMachineDamage = bu.getButton("Machinegun damage ++: 1 Att", 2, 1);
+        increaseSubmachineDamage = bu.getButton("SMG damage ++: 1 Att", 1, 1);
+        increaseMachineDamage = bu.getButton("LMG damage ++: 1 Att", 2, 1);
         increaseShotgunDamage = bu.getButton("Shotgun damage ++: 1 Att", 3, 1);
 
         pistolAmmo = bu.getButton("Pistol ammo: " + pistolAmmoCost, 0, 2);
-        submachineAmmo = bu.getButton("Submachinegun ammo: " + subAmmoCost, 1, 2);
-        machineAmmo = bu.getButton("Machinegun ammo: " + machineAmmo, 2, 2);
+        submachineAmmo = bu.getButton("SMG ammo: " + subAmmoCost, 1, 2);
+        machineAmmo = bu.getButton("LMG ammo: " + machineAmmo, 2, 2);
         shotgunAmmo = bu.getButton("Shotgun ammo: " + shotgunAmmo, 3, 2);
 
         backToShop = bu.getButton("Back to Shop", 0,3);
@@ -123,6 +123,7 @@ public class WeaponUpgradeScreen implements Screen {
                     player.setWeapon(guns.get("pistol"));
                     player.sc.playDing();
                     player.setMoney(player.getMoney() - pistolCost);
+                    player.pistolAmmo += 100;
                 }else{
                     player.sc.playError();
                 }
@@ -143,6 +144,7 @@ public class WeaponUpgradeScreen implements Screen {
                     player.setWeapon(guns.get("submachine"));
                     player.sc.playDing();
                     player.setMoney(player.getMoney() - subCost);
+                    player.subAmmo += 50;
                 }else{
                     player.sc.playError();
                 }
@@ -162,6 +164,7 @@ public class WeaponUpgradeScreen implements Screen {
                     player.setWeapon(guns.get("machine"));
                     player.sc.playDing();
                     player.setMoney(player.getMoney() - machineCost);
+                    player.machineAmmo += 30;
                 }else{
                     player.sc.playError();
                 }
@@ -182,6 +185,7 @@ public class WeaponUpgradeScreen implements Screen {
                     player.setWeapon(guns.get("shotgun"));
                     player.sc.playDing();
                     player.setMoney(player.getMoney() - shotgunCost);
+                    player.shotgunAmmo += 15;
                 }else{
                     player.sc.playError();
                 }
