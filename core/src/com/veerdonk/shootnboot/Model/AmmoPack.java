@@ -15,6 +15,7 @@ public class AmmoPack {
         this.ammoSprite = ammoSprite;
         this.ammoRect = ammoRect;
         this.ammoType = ammoType;
+        this.isCollected = false;
     }
 
     public Sprite getAmmoSprite() {

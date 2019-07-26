@@ -50,7 +50,7 @@ public class MapNode {
         }
     }
 
-    public void removeAmmoPackFromTile(AmmoPack ammoPack){
+    public void removeAmmoPackFromArray(AmmoPack ammoPack){
         for(int i = 0; i < ammoPacksInTile.size; i++){
             if(ammoPacksInTile.get(i) == ammoPack){
                 ammoPacksInTile.removeIndex(i);

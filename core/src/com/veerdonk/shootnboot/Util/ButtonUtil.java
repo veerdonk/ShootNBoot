@@ -20,6 +20,9 @@ public class ButtonUtil {
         style.font = game.font;
     }
 
+
+    //TODO buttons bleed over into eachother - fix
+    // Maybe make a fixed width for buttons \w text wrap
     public TextButton getButton(String text, int col, int row){
         TextButton button = new TextButton(text, style);
         float xpos = 0;

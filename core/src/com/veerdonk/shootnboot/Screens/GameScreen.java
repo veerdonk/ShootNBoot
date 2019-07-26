@@ -5,7 +5,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -22,11 +21,8 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -49,12 +45,8 @@ import com.veerdonk.shootnboot.Pools.BulletPool;
 import com.veerdonk.shootnboot.Pools.ZombiePool;
 import com.veerdonk.shootnboot.ShootNBoot;
 
-import java.awt.Menu;
-import java.sql.Time;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Random;
 
 public class GameScreen implements Screen {
@@ -370,6 +362,24 @@ public class GameScreen implements Screen {
 
         batch.setProjectionMatrix(cameraController.getCamera().combined);
         batch.begin();
+
+        spawnAmmoPack();
+        for(int i = 0; i < activeAmmoPacks.size; i++){
+            AmmoPack ammoPack = activeAmmoPacks.get(i);
+            if(ammoPack.isCollected){
+                //TODO play sound
+                player.getAmmo(ammoPack.getAmmoType());
+                activeAmmoPacks.removeIndex(i);
+                //ammoPack.getAmmoSprite().setPosition(0,0);
+                getCurrentMapNode(ammoPack.getAmmoRect().getX(), ammoPack.getAmmoRect().getY()).removeAmmoPackFromArray(ammoPack);
+                Gdx.app.log("picked up: ", "Ammo");
+            }else{
+                ammoPack.getAmmoSprite().setColor(ammoPack.getColor());
+                ammoPack.getAmmoSprite().draw(batch);
+                ammoPack.getAmmoSprite().setColor(Color.WHITE);
+            }
+        }
+
         for (int i = 0; i < activeExplosions.size; i++) {
             Explosion explosion = activeExplosions.get(i);
             explosion.update(Gdx.graphics.getDeltaTime());
@@ -531,21 +541,7 @@ public class GameScreen implements Screen {
             }
         }
 
-        spawnAmmoPack();
-        for(int i = 0; i < activeAmmoPacks.size; i++){
-            AmmoPack ammoPack = activeAmmoPacks.get(i);
-            if(ammoPack.isCollected){
-                //TODO play sound
-                player.getAmmo(ammoPack.getAmmoType());
-                activeAmmoPacks.removeIndex(i);
-                ammoPack.getAmmoSprite().setPosition(0,0);
-                getCurrentMapNode(ammoPack.getAmmoRect().getX(), ammoPack.getAmmoRect().getY()).removeAmmoPackFromTile(ammoPack);
-            }else{
-                batch.setColor(ammoPack.getColor());
-                ammoPack.getAmmoSprite().draw(batch);
-                batch.setColor(Color.WHITE);
-            }
-        }
+
 
         ////////////////////////////////////////
 
@@ -620,10 +616,12 @@ public class GameScreen implements Screen {
     }
 
     private void spawnAmmoPack(){
-        if(now - lastAmmoPack > random.nextInt(16000) + 4000){
+        if(now - lastAmmoPack > random.nextInt(8000) + 6000){
             GunType ammoType = randomEnum(GunType.class);
             float randX = 50 + random.nextInt( 3150 - 50);
             float randY = 50 + random.nextInt( 3150 - 50);
+            randX = 260;
+            randY = 260;
             AmmoPack ammoPack = new AmmoPack(ammoSprite, new Rectangle(randX, randY, 30, 30), ammoType);
             ammoPack.getAmmoSprite().setSize(30, 30);
             ammoPack.getAmmoSprite().setPosition(randX, randY);
