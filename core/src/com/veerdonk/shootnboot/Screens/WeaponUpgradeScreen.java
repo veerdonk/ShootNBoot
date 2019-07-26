@@ -53,10 +53,10 @@ public class WeaponUpgradeScreen implements Screen {
     private int machineCost = 120;
     private int shotgunCost = 150;
 
-    private int pistolAmmoCost = 1; //TODO update costs + balance
-    private int subAmmoCost = 5;
-    private int machineAmmoCost = 10;
-    private int shotgunAmmoCost = 20;
+    private int pistolAmmoCost = 50; //TODO create maxammo(and buy to max)
+    private int subAmmoCost = 50;
+    private int machineAmmoCost = 70;
+    private int shotgunAmmoCost = 70;
 
     public WeaponUpgradeScreen(final ShootNBoot game, Screen parent, final Player player, final Map<String, Gun> guns) {
         this.parent = parent;
@@ -200,7 +200,7 @@ public class WeaponUpgradeScreen implements Screen {
 
                if(player.getMoney() >= pistolAmmoCost){
                    player.sc.playDing();
-                   //TODO add ammo to player/gun
+                   player.pistolAmmo += 50;
                }else{
                    player.sc.playError();
                }
@@ -218,7 +218,7 @@ public class WeaponUpgradeScreen implements Screen {
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 if(player.getMoney() >= subAmmoCost){
                     player.sc.playDing();
-                    //TODO add ammo to player/gun
+                    player.subAmmo += 50;
                 }else{
                     player.sc.playError();
                 }
@@ -235,7 +235,7 @@ public class WeaponUpgradeScreen implements Screen {
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 if(player.getMoney() >= machineAmmoCost){
                     player.sc.playDing();
-                    //TODO add ammo to player/gun
+                    player.machineAmmo += 30;
                 }else{
                     player.sc.playError();
                 }
@@ -252,7 +252,7 @@ public class WeaponUpgradeScreen implements Screen {
             public void touchUp (InputEvent event, float x, float y, int pointer, int button){
                 if(player.getMoney() >= shotgunAmmoCost){
                     player.sc.playDing();
-                    //TODO add ammo to player/gun
+                    player.shotgunAmmo += 15;
                 }else{
                     player.sc.playError();
                 }

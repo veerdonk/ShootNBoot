@@ -276,4 +276,21 @@ public class Player extends Character {
     public boolean isSpeedActive() {
         return speedActive;
     }
+
+    public void getAmmo(GunType ammoType) {
+        switch(ammoType){
+            case PISTOL:
+                pistolAmmo += 50;
+                break;
+            case SUBMACHINE:
+                subAmmo += 50;
+                break;
+            case MACHINEGUN:
+                machineAmmo += 30;
+                break;
+            case SHOTGUN:
+                shotgunAmmo += 15;
+                break;
+        }
+    }
 }

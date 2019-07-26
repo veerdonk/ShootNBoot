@@ -35,6 +35,7 @@ import com.veerdonk.shootnboot.Controllers.CameraController;
 import com.veerdonk.shootnboot.Controllers.CollisionController;
 import com.veerdonk.shootnboot.Controllers.SoundController;
 import com.veerdonk.shootnboot.Controllers.TouchpadController;
+import com.veerdonk.shootnboot.Model.AmmoPack;
 import com.veerdonk.shootnboot.Model.Bullet;
 import com.veerdonk.shootnboot.Model.Explosion;
 import com.veerdonk.shootnboot.Model.Gun;
@@ -48,6 +49,8 @@ import com.veerdonk.shootnboot.Pools.BulletPool;
 import com.veerdonk.shootnboot.Pools.ZombiePool;
 import com.veerdonk.shootnboot.ShootNBoot;
 
+import java.awt.Menu;
+import java.sql.Time;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -120,6 +123,9 @@ public class GameScreen implements Screen {
     private long textDisplayedSince;
     private boolean swarmSpawned;
     private Gun projectiles;
+    private long lastAmmoPack = TimeUtils.millis();
+    private Sprite ammoSprite;
+    private Array<AmmoPack> activeAmmoPacks;
 
     public GameScreen(final ShootNBoot game) {
         this.game = game;
@@ -242,6 +248,10 @@ public class GameScreen implements Screen {
         player.setBombs(1);
         stage.addActor(bombButton);
         game.setScreen(new ShopScreen(game, this, player, guns));
+
+        activeAmmoPacks = new Array<AmmoPack>();
+        Texture tex = new Texture(Gdx.files.internal("ammoPack.png"));
+        ammoSprite = new Sprite(tex); //TODO move sprite to texture atlas
     }
 
     @Override
@@ -521,7 +531,21 @@ public class GameScreen implements Screen {
             }
         }
 
-        //TODO implement method for spawning ammopacks & loop for processing packs/pickups
+        spawnAmmoPack();
+        for(int i = 0; i < activeAmmoPacks.size; i++){
+            AmmoPack ammoPack = activeAmmoPacks.get(i);
+            if(ammoPack.isCollected){
+                //TODO play sound
+                player.getAmmo(ammoPack.getAmmoType());
+                activeAmmoPacks.removeIndex(i);
+                ammoPack.getAmmoSprite().setPosition(0,0);
+                getCurrentMapNode(ammoPack.getAmmoRect().getX(), ammoPack.getAmmoRect().getY()).removeAmmoPackFromTile(ammoPack);
+            }else{
+                batch.setColor(ammoPack.getColor());
+                ammoPack.getAmmoSprite().draw(batch);
+                batch.setColor(Color.WHITE);
+            }
+        }
 
         ////////////////////////////////////////
 
@@ -591,6 +615,21 @@ public class GameScreen implements Screen {
         if (player.getHealth() <= 0) {
             game.setScreen(new GameOverScreen(game));
             dispose();
+        }
+
+    }
+
+    private void spawnAmmoPack(){
+        if(now - lastAmmoPack > random.nextInt(16000) + 4000){
+            GunType ammoType = randomEnum(GunType.class);
+            float randX = 50 + random.nextInt( 3150 - 50);
+            float randY = 50 + random.nextInt( 3150 - 50);
+            AmmoPack ammoPack = new AmmoPack(ammoSprite, new Rectangle(randX, randY, 30, 30), ammoType);
+            ammoPack.getAmmoSprite().setSize(30, 30);
+            ammoPack.getAmmoSprite().setPosition(randX, randY);
+            activeAmmoPacks.add(ammoPack);
+            getCurrentMapNode(randX, randY).ammoPacksInTile.add(ammoPack);
+            lastAmmoPack = now;
         }
 
     }
