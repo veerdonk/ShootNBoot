@@ -168,8 +168,8 @@ public class GameScreen implements Screen {
         batch = new SpriteBatch();
         cameraController = new CameraController(800, 480);
         Sprite playerSprite = textureAtlas.createSprite("survivor1_stand");
-        int playerx = 2800;
-        int playery = 2800;
+        int playerx = 200;
+        int playery = 200;
         player = new Player(
                 playerSprite,
                 5,
@@ -455,8 +455,8 @@ public class GameScreen implements Screen {
             Array<MapNode> collisionMapnodes = getCollisionMapNodes(b.direction, getCurrentMapNode(b.position.x, b.position.y));
             for (MapNode node : collisionMapnodes) {
                 for (Rectangle wallRect : node.wallsInTile)
-                    if (collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x, false) ||
-                            collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y, false)) {
+                    if (collisionController.checkX(b.bulletRect, bSprite, wallRect, node, b.position.x, b.direction.x) ||
+                            collisionController.checkY(b.bulletRect, bSprite, wallRect, node, b.position.y, b.direction.y)) {
                         bp.free(b);
                         activeBullets.removeIndex(i);
                         isRemoved = true;
@@ -464,8 +464,8 @@ public class GameScreen implements Screen {
                 for (Zombie zombie : node.zombiesInTile) {
                     if(!isRemoved) {
                         if (!b.gun.isEnemyProjectile) {
-                            if (collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x, false) ||
-                                    collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y, false)) {
+                            if (collisionController.checkX(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.x, b.direction.x) ||
+                                    collisionController.checkY(b.bulletRect, bSprite, zombie.getZombieRect(), node, b.position.y, b.direction.y)) {
                                 zombie.hurt(b.gun.getDamage());
                                 sc.hurtZombie();
                                 node.removeZombieFromArray(zombie);
@@ -483,8 +483,8 @@ public class GameScreen implements Screen {
                 for (Player p : node.playerInTile) {
                     if (!isRemoved) {
                         if (b.gun.isEnemyProjectile) {
-                            if (collisionController.checkX(b.bulletRect, bSprite, player.getPlayerRect(), node, b.position.x, b.direction.x, false) ||
-                                    collisionController.checkY(b.bulletRect, bSprite, player.getPlayerRect(), node, b.position.y, b.direction.y, false)) {
+                            if (collisionController.checkX(b.bulletRect, bSprite, player.getPlayerRect(), node, b.position.x, b.direction.x) ||
+                                    collisionController.checkY(b.bulletRect, bSprite, player.getPlayerRect(), node, b.position.y, b.direction.y)) {
                                 player.hurt(zombieDamage * 3);
                                 bp.free(b);
                                 activeExplosions.add(new Explosion(b.position.x, b.position.y, explosionTextures, 32, Color.RED));
