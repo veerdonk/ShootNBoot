@@ -90,25 +90,6 @@ public class CollisionController {
             sprite.setPosition(endx, endy);
             rect.setPosition(endx, endy);
         }
-//        else if(collidedX && collidedY){
-//            sprite.setY(newEndY);
-//            rect.y = newEndY;
-//            sprite.setX(newEndX);
-//            rect.x = newEndX;
-//        }
-//        else if(!collidedX && collidedY){
-//            sprite.setX(endx);
-//            rect.x = endx;
-//            sprite.setY(newEndY);
-//            rect.y = newEndY;
-//        }
-//        else if(collidedX && ! collidedY){
-//            Gdx.app.log("setting y pos", Float.toString(endy));
-//            sprite.setY(endy);
-//            rect.y = endy;
-//            sprite.setX(newEndX);
-//            rect.x = newEndX;
-//        }
     }
 
     //TODO fix corner pieces
@@ -125,61 +106,29 @@ public class CollisionController {
         if(
             percentX < 0 && //moving left
             endx < rightCollisionWall && //position after moving is inside other rect
-            movingRect.x > rightCollisionWall //&&//start position was to the right of other rect
+            movingRect.x > rightCollisionWall //start position was to the right of other rect
         ){
-            Gdx.app.log("moving left, wall found", rectToCheck.toString());
             newx = endx + (rightCollisionWall - endx) + 1;
             newEndX = newx;
             collided = true;
         }
 
         //move right
-//        Gdx.app.log("moving rect x", Float.toString(movingRect.x - movingRect.width));
-//        Gdx.app.log("leftcollisionwall", Float.toString(leftCollisionWall));
-//        Gdx.app.log("endx", Float.toString(endx));
         if(
                 percentX > 0 &&
                 endx + movingRect.width > leftCollisionWall &&
-                movingRect.x + movingRect.width < leftCollisionWall//&&
-                //!(movingRect.y > rectToCheck.y + rectToCheck.height) &&
-                //!(movingRect.y < rectToCheck.y)
+                movingRect.x + movingRect.width < leftCollisionWall
         ){
-            Gdx.app.log("moving right, wall found", rectToCheck.toString());
             newx = endx - movingRect.width - (endx - leftCollisionWall) - 1;
             newEndX = newx;
             collided = true;
         }
-
-
-
-//        if(rectToCheck.x + rectToCheck.width > endx && percentX < 0 && node.getxNode() <= 49 && node.getyNode() >= 1 && node.getyNode() < 49){
-//            //Gdx.app.log("wall hit: ", rectToCheck.toString());
-//            newx = rectToCheck.x + rectToCheck.width + 1;
-//            collided = true;
-//        }
-//        if(rectToCheck.x < endx + rectToCheck.width && percentX > 0 &&  node.getxNode() > 0 && node.getyNode() >= 1 && node.getyNode() < 49){
-////            Gdx.app.log("percentX", Float.toString(percentX));
-////            Gdx.app.log("endx", Float.toString(endx + 32));
-//            newx = rectToCheck.x - rectToCheck.width - 1;
-//            collided = true;
-//        }
-
-
-//        if(collided) {
-//            if(move) {
-//                movingRect.x = newx;
-//                sprite.setX(newx);
-//            }
-//        }
         return collided;
     }
 
     public boolean checkY(Rectangle movingRect, Sprite sprite, Rectangle rectToCheck, MapNode node, float endy, float percentY, boolean move){
         float newy = endy;
         boolean collided = false;
-
-        float leftCollisionWall = rectToCheck.x;
-        float rightCollisionWall = rectToCheck.x + rectToCheck.width;
 
         float topCollisionWall = rectToCheck.y + rectToCheck.height;
         float botCollisionWall = rectToCheck.y;// - rectToCheck.height;
@@ -188,48 +137,22 @@ public class CollisionController {
         if(
                 percentY < 0 &&
                 endy < topCollisionWall &&
-                movingRect.y > topCollisionWall //&&
-                //!(movingRect.x + movingRect.width < rightCollisionWall) &&
-                //!(movingRect.x > leftCollisionWall)
+                movingRect.y > topCollisionWall
         ){
-            Gdx.app.log("moving down, wall found", rectToCheck.toString());
             newy = endy + (topCollisionWall - endy) + 1;
             newEndY = newy;
             collided = true;
         }
-//        Gdx.app.log("movingrect top y", Float.toString(movingRect.y + movingRect.height));
-        //move up
         if(
                 percentY > 0 &&
                 endy + movingRect.height > botCollisionWall &&
-                movingRect.y + movingRect.height < botCollisionWall //&&
-                //!(movingRect.x + movingRect.width < rightCollisionWall) &&
-                //!(movingRect.x > leftCollisionWall)
+                movingRect.y + movingRect.height < botCollisionWall
         ){
-            Gdx.app.log("moving up, wall found", rectToCheck.toString());
             newy = endy - movingRect.height - (endy - botCollisionWall) - 1;
             newEndY = newy;
             collided = true;
         }
 
-
-//
-//        if(rectToCheck.y + rectToCheck.height > endy && percentY < 0 && node.getyNode() <= 49 && node.getxNode() >= 1 && node.getxNode() < 49){
-//            newy = rectToCheck.y + rectToCheck.height + 1;
-//            collided = true;
-//        }
-//        if(rectToCheck.y < endy + rectToCheck.height && percentY > 0 && node.getyNode() > 0 && node.getxNode() >= 1 && node.getxNode() < 49){
-//            newy = rectToCheck.y - rectToCheck.height - 1;
-//            collided = true;
-//        }
-
-
-//        if(collided) {
-//            if(move) {
-//                movingRect.y = newy;
-//                sprite.setY(newy);
-//            }
-//        }
         return collided;
     }
 
@@ -245,9 +168,8 @@ public class CollisionController {
         //move left
         if(
                 percentX < 0 && //moving left
-                        endx < rightCollisionWall
+                endx < rightCollisionWall
         ){
-            Gdx.app.log("moving left, wall found", rectToCheck.toString());
             newx = endx + (rightCollisionWall - endx) + 1;
             newEndX = newx;
             collided = true;
@@ -256,9 +178,8 @@ public class CollisionController {
         //move right
         if(
                 percentX > 0 &&
-                        endx + movingRect.width > leftCollisionWall
+                endx + movingRect.width > leftCollisionWall
         ){
-            Gdx.app.log("moving right, wall found", rectToCheck.toString());
             newx = endx - movingRect.width - (endx - leftCollisionWall) - 1;
             newEndX = newx;
             collided = true;
@@ -270,20 +191,14 @@ public class CollisionController {
         float newy = endy;
         boolean collided = false;
 
-        float leftCollisionWall = rectToCheck.x;
-        float rightCollisionWall = rectToCheck.x + rectToCheck.width;
-
         float topCollisionWall = rectToCheck.y + rectToCheck.height;
         float botCollisionWall = rectToCheck.y;// - rectToCheck.height;
 
         //move down
         if(
                 percentY < 0 &&
-                        endy < topCollisionWall
-
-
+                endy < topCollisionWall
         ){
-            Gdx.app.log("moving down, wall found", rectToCheck.toString());
             newy = endy + (topCollisionWall - endy) + 1;
             newEndY = newy;
             collided = true;
@@ -293,7 +208,6 @@ public class CollisionController {
                 percentY > 0 &&
                         endy + movingRect.height > botCollisionWall
         ){
-            Gdx.app.log("moving up, wall found", rectToCheck.toString());
             newy = endy - movingRect.height - (endy - botCollisionWall) - 1;
             newEndY = newy;
             collided = true;

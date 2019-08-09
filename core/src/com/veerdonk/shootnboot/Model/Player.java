@@ -49,6 +49,8 @@ public class Player extends Character {
     public int machineAmmo;
     public int shotgunAmmo;
     public Queue<Gun> weapons;
+    private Gun quadGun;
+    private Gun rapidGun;
 
 
     public Player(Sprite playSprite, float playerSpeed, float initialX, float initialY, MapNode currentNode, SoundController sc) {
@@ -86,7 +88,7 @@ public class Player extends Character {
         }
         if(quadActive) {
             if (TimeUtils.millis() - quadActivated > powerUpDuration) {
-                this.weapon.setDamage(oldDamage);
+                quadGun.setDamage(oldDamage);
                 quadActive = false;
                 Gdx.app.log("powerup", "quad stopped");
             }
@@ -100,7 +102,7 @@ public class Player extends Character {
         }
         if(rapidActive){
             if(TimeUtils.millis() - rapidActivated > powerUpDuration){
-                this.weapon.setFireRate(oldFireRate);
+                rapidGun.setFireRate(oldFireRate);
                 rapidActive = false;
                 Gdx.app.log("powerup", "rapid stopped");
             }
@@ -204,22 +206,21 @@ public class Player extends Character {
         if(type == PowerUPType.QUAD){
             if(weapon != null) {
                 quadActive = true;
-//                oldDamage = this.weapon.getDamage();
                 this.weapon.setDamage(this.weapon.getDamage() * 4);
                 quadActivated = TimeUtils.millis();
+                quadGun = this.weapon;
                 Gdx.app.log("powerup", "quad");
             }
         }else if(type == PowerUPType.RAPIDFIRE){
             if(weapon != null) {
                 rapidActive = true;
-//            oldFireRate = this.weapon.getFireRate();
                 this.weapon.setFireRate(this.weapon.getFireRate() / 2);
                 rapidActivated = TimeUtils.millis();
+                rapidGun = this.weapon;
                 Gdx.app.log("powerup", "rapid fire");
             }
         }else if(type == PowerUPType.SPEED){
             speedActive = true;
-//            oldSpeed = playerSpeed;
             this.setPlayerSpeed((float) (playerSpeed*1.5));
             speedActivated = TimeUtils.millis();
             Gdx.app.log("powerup", "speed");
