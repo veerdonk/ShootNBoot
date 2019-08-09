@@ -168,12 +168,14 @@ public class GameScreen implements Screen {
         batch = new SpriteBatch();
         cameraController = new CameraController(800, 480);
         Sprite playerSprite = textureAtlas.createSprite("survivor1_stand");
+        int playerx = 2800;
+        int playery = 2800;
         player = new Player(
                 playerSprite,
                 5,
-                200,
-                200,
-                getCurrentMapNode(200,200),
+                playerx,
+                playery,
+                getCurrentMapNode(playerx,playery),
                 sc
         );
         player.currentNode.playerInTile.add(player);
